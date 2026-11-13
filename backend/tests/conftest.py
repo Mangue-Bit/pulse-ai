@@ -12,11 +12,13 @@ os.environ["PULSE_MODELO_SIMULADO"] = "1"
 @pytest.fixture()
 def banco_limpo():
     """Banco vazio, com todas as tabelas, para cada teste."""
-    from app import banco
+    from app import banco, relogio
 
     banco.apagar_tudo()
+    relogio.recarregar()
     yield
     banco.apagar_tudo()
+    relogio.recarregar()
 
 
 @pytest.fixture()
