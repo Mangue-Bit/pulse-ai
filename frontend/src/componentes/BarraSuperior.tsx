@@ -1,9 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 
-import { Clock, FastForward, RotateCcw, WifiOff } from 'lucide-react'
+import { Clock, MessageCircle, RotateCcw, Route, Stethoscope, WifiOff, type LucideIcon } from 'lucide-react'
 
 import { api, type Disparo } from '@/api'
-import { Selecao, Selo } from '@/componentes/basicos'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,13 +14,13 @@ import {
   AlertDialogTitle,
 } from '@/componentes/ui/alert-dialog'
 import { Button } from '@/componentes/ui/button'
-import { useEstado, type AbaEquipe } from '@/estado'
-import { diaDaSemana, horaComSegundos, PAPEL, rotulo, SITUACAO } from '@/lib/formato'
+import { useEstado, type Tela } from '@/estado'
+import { diaDaSemana, hora } from '@/lib/formato'
 import { cn } from '@/lib/utils'
 
 const AVANCOS = [
   { minutos: 15, nome: '+15 min' },
-  { minutos: 60, nome: '+1 h' },
+  { minutos: 60, nome: '+1 hora' },
   { minutos: 60 * 24, nome: '+1 dia' },
 ]
 
@@ -38,46 +37,79 @@ function Marca() {
           strokeLinejoin="round"
         />
       </svg>
-      <span className="font-serif text-[1.45rem] leading-none font-semibold tracking-tight">Pulse</span>
+      <span className="font-serif text-[1.5rem] leading-none font-semibold tracking-tight">Pulse</span>
     </div>
   )
 }
 
-function Indicador({ nome, valor, aba, tom }: { nome: string; valor: number; aba: AbaEquipe; tom: string }) {
-  const { abrirAba } = useEstado()
+function ItemDeNavegacao({
+  tela,
+  nome,
+  icone: Icone,
+  contador,
+  urgente,
+}: {
+  tela: Tela
+  nome: string
+  icone: LucideIcon
+  contador?: number
+  urgente?: boolean
+}) {
+  const { tela: atual, irPara } = useEstado()
+  const ativa = atual === tela
   return (
     <button
       type="button"
-      onClick={() => abrirAba(aba)}
-      className="flex items-center gap-1.5 rounded-lg px-1.5 py-1 text-sm hover:bg-muted"
-      title={`Abrir ${nome.toLowerCase()}`}
+      onClick={() => irPara(tela)}
+      aria-current={ativa ? 'page' : undefined}
+      className={cn(
+        'relative flex h-9 items-center gap-2 rounded-full px-4 text-[0.95rem] font-semibold transition-colors',
+        ativa ? 'bg-primary text-primary-foreground' : 'text-foreground/70 hover:bg-muted hover:text-foreground',
+      )}
     >
-      <span className={cn('min-w-6 rounded-md px-1.5 text-center text-sm leading-6 font-bold', valor > 0 ? tom : 'bg-muted text-muted-foreground')}>
-        {valor}
-      </span>
-      <span className="font-medium text-foreground/80">{nome}</span>
+      <Icone className="size-4" aria-hidden />
+      {nome}
+      {contador !== undefined && contador > 0 && (
+        <span
+          className={cn(
+            'min-w-5 rounded-full px-1.5 text-center text-xs leading-5 font-bold text-white',
+            urgente ? 'bg-urgencia' : 'bg-equipe',
+          )}
+        >
+          {contador}
+        </span>
+      )}
     </button>
   )
 }
 
+/** Painel que abre abaixo de um botão e fecha com clique fora ou Esc. */
+function Suspenso({ aberto, aoFechar, children }: { aberto: boolean; aoFechar: () => void; children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!aberto) return
+    const fora = (e: MouseEvent) => {
+      if (ref.current && !ref.current.parentElement?.contains(e.target as Node)) aoFechar()
+    }
+    const esc = (e: KeyboardEvent) => e.key === 'Escape' && aoFechar()
+    document.addEventListener('mousedown', fora)
+    document.addEventListener('keydown', esc)
+    return () => {
+      document.removeEventListener('mousedown', fora)
+      document.removeEventListener('keydown', esc)
+    }
+  }, [aberto, aoFechar])
+  if (!aberto) return null
+  return (
+    <div ref={ref} className="absolute top-[calc(100%+8px)] right-0 z-30 w-72 rounded-2xl border bg-popover p-4 shadow-xl">
+      {children}
+    </div>
+  )
+}
+
 export function BarraSuperior() {
-  const {
-    saude,
-    conectado,
-    pacientes,
-    paciente,
-    escolherPaciente,
-    equipe,
-    atuando,
-    escolherAtuando,
-    relogio,
-    agora,
-    alertas,
-    duvidas,
-    propostas,
-    recarregarTudo,
-    mostrarRastro,
-  } = useEstado()
+  const { conectado, relogio, agora, alertas, duvidas, propostas, recarregarTudo, mostrarRastro } = useEstado()
+  const [menu, setMenu] = useState(false)
   const [avancando, setAvancando] = useState(false)
   const [disparos, setDisparos] = useState<Disparo[] | null>(null)
   const [confirmando, setConfirmando] = useState(false)
@@ -114,100 +146,82 @@ export function BarraSuperior() {
     }
   }
 
-  const abertos = (alertas.dados ?? []).filter((a) => a.status === 'aberto' || a.status === 'pendencia_critica').length
+  const alertasAbertos = (alertas.dados ?? []).filter((a) => a.status === 'aberto' || a.status === 'pendencia_critica').length
   const duvidasAbertas = (duvidas.dados ?? []).filter((d) => d.status !== 'respondida').length
   const pendentes = (propostas.dados ?? []).filter((p) => p.estado === 'pendente').length
 
   return (
-    <header className="relative flex h-[52px] shrink-0 items-center gap-2.5 border-b bg-card px-3 whitespace-nowrap">
+    <header className="relative z-20 grid h-16 shrink-0 grid-cols-[1fr_auto_1fr] items-center border-b bg-card px-5">
       <Marca />
 
-      <div className="flex items-center gap-1.5 border-l pl-3">
-        <Clock className="size-4 text-muted-foreground" aria-hidden />
-        <div className="leading-tight">
-          <p className="text-[0.95rem] font-bold tabular-nums">{horaComSegundos(agora)}</p>
-          <p className="text-[0.7rem] text-muted-foreground">{diaDaSemana(agora)}</p>
-        </div>
-        <div className="ml-1 flex overflow-hidden rounded-lg border" role="group" aria-label="Avançar o relógio do sistema">
-          {AVANCOS.map((avanco) => (
-            <button
-              key={avanco.minutos}
-              type="button"
-              disabled={avancando || !conectado}
-              onClick={() => void avancar(avanco.minutos)}
-              className="flex h-7 items-center gap-1 border-l px-2 text-xs font-semibold first:border-l-0 hover:bg-muted disabled:opacity-50"
-            >
-              {avanco.minutos === 15 && <FastForward className="size-3" aria-hidden />}
-              {avanco.nome}
-            </button>
-          ))}
-        </div>
-        <Selo>simulado</Selo>
-      </div>
-
-      <label className="flex min-w-0 items-center gap-1.5 border-l pl-2.5 text-xs font-semibold text-muted-foreground">
-        Paciente
-        <Selecao
-          value={paciente?.id ?? ''}
-          onChange={(e) => escolherPaciente(e.target.value)}
-          disabled={!pacientes.dados?.length}
-          className="w-40"
-        >
-          {(pacientes.dados ?? []).map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.nome}
-              {p.situacao !== 'ativo' ? ` (${rotulo(SITUACAO, p.situacao).toLowerCase()})` : ''}
-              {!p.aceite_valido && p.situacao !== 'aceite_revogado' ? ' (sem aceite)' : ''}
-            </option>
-          ))}
-        </Selecao>
-      </label>
-
-      <nav className="flex items-center border-l pl-2" aria-label="Filas da equipe">
-        <Indicador nome="Alertas" valor={abertos} aba="alertas" tom="bg-urgencia text-white" />
-        <Indicador nome="Dúvidas" valor={duvidasAbertas} aba="duvidas" tom="bg-equipe text-white" />
-        <Indicador nome="Aprovações" valor={pendentes} aba="aprovacoes" tom="bg-equipe text-white" />
+      <nav className="flex items-center gap-1 rounded-full bg-background p-1" aria-label="Telas do Pulse">
+        <ItemDeNavegacao tela="paciente" nome="Paciente" icone={MessageCircle} />
+        <ItemDeNavegacao
+          tela="equipe"
+          nome="Equipe"
+          icone={Stethoscope}
+          contador={alertasAbertos + duvidasAbertas + pendentes}
+          urgente={alertasAbertos > 0}
+        />
+        <ItemDeNavegacao tela="rastro" nome="Rastro" icone={Route} />
       </nav>
 
-      <div className="ml-auto flex min-w-0 items-center gap-2">
+      <div className="flex items-center justify-end gap-2">
         {!conectado && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">
-            <WifiOff className="size-3.5" aria-hidden />
-            sem conexão
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-urgencia-suave px-3 py-1 text-sm font-semibold text-urgencia">
+            <WifiOff className="size-4" aria-hidden />
+            Sem conexão
           </span>
         )}
-        {saude.dados?.modelo_simulado && <Selo>modelo simulado</Selo>}
-        <label className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
-          Atuando como
-          <Selecao
-            value={atuando?.id ?? ''}
-            onChange={(e) => escolherAtuando(e.target.value)}
-            disabled={equipe.length === 0}
-            className="w-36"
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setMenu((m) => !m)}
+            aria-expanded={menu}
+            aria-label="Relógio e controles da demonstração"
+            className="flex h-9 items-center gap-2 rounded-full border px-3 text-sm font-semibold hover:bg-muted aria-expanded:bg-muted"
           >
-            {equipe.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.nome} ({PAPEL[p.papel]})
-              </option>
-            ))}
-          </Selecao>
-        </label>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => setConfirmando(true)}
-          disabled={!conectado}
-          aria-label="Reiniciar demonstração"
-          title="Reiniciar demonstração"
-        >
-          <RotateCcw />
-        </Button>
+            <Clock className="size-4 text-muted-foreground" aria-hidden />
+            <span className="tabular-nums">{hora(agora)}</span>
+            <span className="font-normal text-muted-foreground">{diaDaSemana(agora)}</span>
+          </button>
+          <Suspenso aberto={menu} aoFechar={() => setMenu(false)}>
+            <p className="font-semibold">Avançar o relógio</p>
+            <p className="mt-0.5 text-sm text-muted-foreground">Faça os prazos vencerem sem esperar.</p>
+            <div className="mt-3 grid grid-cols-3 gap-1.5">
+              {AVANCOS.map((avanco) => (
+                <Button
+                  key={avanco.minutos}
+                  variant="outline"
+                  disabled={avancando || !conectado}
+                  onClick={() => void avancar(avanco.minutos)}
+                >
+                  {avanco.nome}
+                </Button>
+              ))}
+            </div>
+            <div className="mt-4 border-t pt-3">
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-muted-foreground"
+                disabled={!conectado}
+                onClick={() => {
+                  setMenu(false)
+                  setConfirmando(true)
+                }}
+              >
+                <RotateCcw data-icon="inline-start" />
+                Recomeçar a demonstração
+              </Button>
+            </div>
+          </Suspenso>
+        </div>
       </div>
 
       {disparos && (
         <div
           role="status"
-          className="absolute top-[56px] left-28 z-20 max-w-md rounded-lg border bg-popover px-3 py-2 text-sm shadow-lg"
+          className="absolute top-[calc(100%+8px)] right-5 z-20 max-w-sm rounded-xl border bg-popover px-4 py-3 text-sm shadow-lg"
         >
           {disparos.length === 0 ? (
             <p className="text-muted-foreground">Relógio avançado. Nenhum prazo venceu.</p>
@@ -226,16 +240,16 @@ export function BarraSuperior() {
       <AlertDialog open={confirmando} onOpenChange={setConfirmando}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Reiniciar a demonstração?</AlertDialogTitle>
+            <AlertDialogTitle>Recomeçar a demonstração?</AlertDialogTitle>
             <AlertDialogDescription>
-              As conversas, os casos, as propostas e o rastro criados nesta sessão são apagados, os dados sintéticos são
-              recarregados e o relógio volta à hora real.
+              Conversas, casos e decisões desta sessão são apagados, os pacientes de exemplo voltam ao estado inicial e o
+              relógio volta à hora real.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={reiniciando}>Cancelar</AlertDialogCancel>
             <AlertDialogAction disabled={reiniciando} onClick={() => void reiniciar()}>
-              Reiniciar demonstração
+              Recomeçar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

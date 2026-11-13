@@ -21,11 +21,11 @@ function CartaoDeDuvida({ duvida }: { duvida: Duvida }) {
   const pendente = duvida.status !== 'respondida'
 
   return (
-    <Cartao className={cn('flex flex-col gap-3', duvida.status === 'vencida' && 'border-urgencia/70')}>
+    <Cartao className={cn('flex flex-col gap-3 p-5 shadow-sm', duvida.status === 'vencida' && 'border-urgencia/70')}>
       <header className="flex flex-wrap items-center gap-2">
         <h3 className="text-base font-bold">{duvida.paciente_nome}</h3>
         {duvida.status === 'aberta' && <Etiqueta cor="equipe">Aguardando o profissional</Etiqueta>}
-        {duvida.status === 'vencida' && <Etiqueta cor="urgencia">Prazo vencido: virou alerta</Etiqueta>}
+        {duvida.status === 'vencida' && <Etiqueta cor="urgencia">Prazo vencido</Etiqueta>}
         {duvida.status === 'respondida' && <Etiqueta cor="concluido">Respondida</Etiqueta>}
         <span className="ml-auto text-sm text-muted-foreground">
           {duvida.status === 'aberta' ? (
@@ -67,7 +67,6 @@ function CartaoDeDuvida({ duvida }: { duvida: Duvida }) {
               <Send data-icon="inline-start" />
               Enviar resposta
             </Button>
-            <p className="text-xs text-muted-foreground">Respondendo como {profissional || 'ninguém selecionado'}</p>
           </div>
         </div>
       ) : (
@@ -92,13 +91,9 @@ export function AbaDuvidas() {
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="rounded-lg bg-equipe-suave px-3 py-2 text-sm leading-relaxed text-foreground/90">
-        Dúvida clínica só é respondida por profissional. Nenhum agente redige nem sugere a resposta: o paciente já
-        recebeu a mensagem fixa avisando do prazo. Se o prazo vencer, a dúvida entra na trilha de urgência.
-      </p>
       {lista.length === 0 ? (
-        <Vazio icone={MessageCircleQuestion} titulo="Nenhuma dúvida na fila">
-          Perguntas sobre dose, horário, troca ou efeito de remédio chegam aqui com prazo de resposta.
+        <Vazio icone={MessageCircleQuestion} titulo="Nenhuma dúvida esperando resposta">
+          Perguntas sobre dose, horário ou efeito de remédio aparecem aqui.
         </Vazio>
       ) : (
         lista.map((duvida) => <CartaoDeDuvida key={duvida.id} duvida={duvida} />)

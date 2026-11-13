@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import { Activity, BadgeCheck } from 'lucide-react'
 
 import { api } from '@/api'
-import { Selo, Vazio } from '@/componentes/basicos'
+import { Vazio } from '@/componentes/basicos'
 import { useEstado } from '@/estado'
 import { useConsulta } from '@/lib/consulta'
 import { diaEHora, dolares, milissegundos, porcento } from '@/lib/formato'
@@ -130,7 +130,7 @@ export function Indicadores() {
         )}
       </Bloco>
 
-      <Bloco titulo="Teste fixo" descricao="Mensagens sintéticas rotuladas, rodadas contra o fluxo da Escuta.">
+      <Bloco titulo="Teste fixo" descricao="Um conjunto fixo de mensagens com a resposta certa conhecida, para medir a qualidade.">
         {m.teste_fixo ? (
           <div className="flex flex-col gap-2.5 rounded-lg border bg-card p-3">
             <Fracao
@@ -155,8 +155,7 @@ export function Indicadores() {
           </div>
         ) : (
           <p className="rounded-lg border border-dashed bg-card p-3 text-sm text-muted-foreground">
-            O teste fixo ainda não foi executado. Rode <code className="font-semibold">python -m avaliacao.rodar</code> na
-            pasta backend para ver o resultado aqui.
+            O teste fixo ainda não foi executado.
           </p>
         )}
       </Bloco>
@@ -164,16 +163,9 @@ export function Indicadores() {
       <section className="flex items-start gap-3 rounded-lg border bg-card p-3">
         <BadgeCheck className="mt-0.5 size-5 shrink-0 text-concluido" aria-hidden />
         <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-sm font-bold">Modelo de risco de abandono</h3>
-            {m.modelo_de_risco.simulado && <Selo />}
-          </div>
+          <h3 className="text-sm font-bold">Modelo de risco de abandono</h3>
           <p className="text-sm">
             Versão {m.modelo_de_risco.versao}, {m.modelo_de_risco.situacao}
-          </p>
-          <p className="mt-0.5 text-xs leading-snug text-muted-foreground">
-            O protótipo usa uma nota sintética por paciente. Uma versão nova só é promovida depois de passar pelo teste
-            fixo.
           </p>
         </div>
       </section>

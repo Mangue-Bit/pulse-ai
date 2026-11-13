@@ -24,6 +24,22 @@ export type AbaEquipe =
   | 'relatorios'
   | 'gestor'
 
+export type Tela = 'paciente' | 'equipe' | 'rastro'
+
+const ABAS: AbaEquipe[] = ['alertas', 'duvidas', 'aprovacoes', 'casos', 'acs', 'territorio', 'relatorios', 'gestor']
+
+/** Lê a tela e a aba da equipe do endereço (#/equipe/aprovacoes), para o link e o recarregamento manterem o lugar. */
+function lerEndereco(): { tela: Tela; aba: AbaEquipe | null } {
+  const [tela, aba] = window.location.hash.replace(/^#\/?/, '').split('/')
+  const valida = tela === 'equipe' || tela === 'rastro' ? tela : 'paciente'
+  return { tela: valida, aba: ABAS.includes(aba as AbaEquipe) ? (aba as AbaEquipe) : null }
+}
+
+function escreverEndereco(tela: Tela, aba: AbaEquipe) {
+  const destino = tela === 'equipe' ? `#/equipe/${aba}` : `#/${tela}`
+  if (window.location.hash !== destino) window.history.replaceState(null, '', destino)
+}
+
 /** De onde vêm os eventos mostrados no painel do rastro. */
 export type OrigemDoRastro =
   | { tipo: 'paciente' }
@@ -45,6 +61,8 @@ interface Estado {
   duvidas: Consulta<Duvida[]>
   propostas: Consulta<Proposta[]>
   casos: Consulta<Caso[]>
+  tela: Tela
+  irPara: (tela: Tela) => void
   aba: AbaEquipe
   abrirAba: (aba: AbaEquipe) => void
   rastro: OrigemDoRastro
@@ -67,8 +85,31 @@ export function ProvedorDeEstado({ children }: { children: ReactNode }) {
 
   const [pacienteId, setPacienteId] = useState<string | null>(null)
   const [atuandoId, setAtuandoId] = useState<string | null>(null)
-  const [aba, setAba] = useState<AbaEquipe>('aprovacoes')
+  const [tela, setTela] = useState<Tela>(() => lerEndereco().tela)
+  const [aba, setAba] = useState<AbaEquipe>(() => lerEndereco().aba ?? 'aprovacoes')
   const [rastro, setRastro] = useState<OrigemDoRastro>({ tipo: 'paciente' })
+
+  useEffect(() => escreverEndereco(tela, aba), [tela, aba])
+  useEffect(() => {
+    const aoMudar = () => {
+      const lido = lerEndereco()
+      setTela(lido.tela)
+      if (lido.aba) setAba(lido.aba)
+    }
+    window.addEventListener('hashchange', aoMudar)
+    return () => window.removeEventListener('hashchange', aoMudar)
+  }, [])
+
+  const abrirAba = useCallback((nova: AbaEquipe) => {
+    setAba(nova)
+    setTela('equipe')
+  }, [])
+
+  // Abrir o rastro de um caso leva à tela do rastro; voltar ao vivo não muda de tela.
+  const mostrarRastro = useCallback((origem: OrigemDoRastro) => {
+    setRastro(origem)
+    if (origem.tipo !== 'paciente') setTela('rastro')
+  }, [])
 
   const paciente = useMemo(() => {
     const lista = pacientes.dados ?? []
@@ -116,10 +157,12 @@ export function ProvedorDeEstado({ children }: { children: ReactNode }) {
     duvidas,
     propostas,
     casos,
+    tela,
+    irPara: setTela,
     aba,
-    abrirAba: setAba,
+    abrirAba,
     rastro,
-    mostrarRastro: setRastro,
+    mostrarRastro,
     recarregarTudo,
   }
 

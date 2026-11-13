@@ -15,7 +15,7 @@ import {
 } from 'lucide-react'
 
 import { api, type Canal, type Proposta } from '@/api'
-import { Cartao, Etiqueta, Prazo, Rotulo, Selecao, Selo, TrechoLiteral, Vazio } from '@/componentes/basicos'
+import { Cartao, Etiqueta, Prazo, Rotulo, Selecao, TrechoLiteral, Vazio } from '@/componentes/basicos'
 import { Button } from '@/componentes/ui/button'
 import { Textarea } from '@/componentes/ui/textarea'
 import { useEstado } from '@/estado'
@@ -74,10 +74,6 @@ export function Fontes({ proposta }: { proposta: Pick<Proposta, 'fontes'> }) {
             {expandida && (
               <div className="border-t px-2.5 py-2">
                 <p className="text-sm leading-relaxed">{fonte.trecho}</p>
-                <div className="mt-1.5 flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">{fonte.id}</span>
-                  {fonte.origem !== 'historico' && <Selo>corpus sintético</Selo>}
-                </div>
               </div>
             )}
           </li>
@@ -130,6 +126,7 @@ function CartaoPendente({ proposta }: { proposta: Proposta }) {
   const [canal, setCanal] = useState<Canal>(proposta.canal === 'audio' ? 'audio' : 'texto')
   const [descricao, setDescricao] = useState(descricaoInicial)
   const [justificativa, setJustificativa] = useState('')
+  const [porQue, setPorQue] = useState(false)
   const profissional = atuando?.nome ?? ''
 
   const concluir = (acao: () => Promise<unknown>) =>
@@ -139,57 +136,61 @@ function CartaoPendente({ proposta }: { proposta: Proposta }) {
     })
 
   return (
-    <Cartao className="flex flex-col gap-3.5 border-equipe/50">
+    <Cartao className="flex flex-col gap-4 p-5 shadow-sm">
       <header className="flex flex-wrap items-center gap-2">
         <h3 className="text-lg leading-tight font-bold">{proposta.paciente_nome}</h3>
         <Etiqueta cor="cuidado">{rotulo(BARREIRA, proposta.barreira)}</Etiqueta>
-        <Etiqueta cor={proposta.risco === 'alto' ? 'urgencia' : 'concluido'}>
-          Risco {proposta.risco} pelo catálogo
-        </Etiqueta>
-        <span className="ml-auto text-sm text-muted-foreground">
-          Validade: <Prazo prazo={proposta.validade} agora={agora} />
-        </span>
+        <Prazo prazo={proposta.validade} agora={agora} className="ml-auto font-medium text-muted-foreground" />
       </header>
 
       {proposta.trecho_literal && (
         <div>
-          <Rotulo className="mb-1">O que o paciente disse, sem alteração</Rotulo>
+          <Rotulo className="mb-1.5">O paciente disse</Rotulo>
           <TrechoLiteral>{proposta.trecho_literal}</TrechoLiteral>
         </div>
       )}
 
-      <div className="rounded-lg border-l-[3px] border-cuidado bg-cuidado-suave/50 px-3 py-2.5">
-        <div className="flex flex-wrap items-center gap-2">
-          <Rotulo>Proposta do {ESPECIALISTA[proposta.especialista]}</Rotulo>
-          <span className="ml-auto inline-flex items-center gap-1 text-xs font-semibold text-cuidado">
+      <div>
+        <div className="mb-1.5 flex flex-wrap items-center gap-2">
+          <Rotulo>O Pulse sugere</Rotulo>
+          <span className="ml-auto inline-flex items-center gap-1 text-sm font-medium text-cuidado">
             <IconeDoCanal canal={proposta.canal} />
-            {rotulo(FERRAMENTA, proposta.ferramenta)}
-            {proposta.canal && `, ${NOME_DO_CANAL[proposta.canal].toLowerCase()}`}
+            {proposta.canal ? NOME_DO_CANAL[proposta.canal] : rotulo(FERRAMENTA, proposta.ferramenta)}
           </span>
         </div>
-        <p className="mt-1 text-base font-semibold">{proposta.item_nome ?? proposta.resumo}</p>
-        {proposta.item_nome && proposta.resumo !== proposta.item_nome && (
-          <p className="text-sm text-foreground/85">{proposta.resumo}</p>
-        )}
-        {proposta.texto_mensagem && modo !== 'editar' && (
-          <p className="mt-2 rounded-lg bg-card px-3 py-2 text-[0.95rem] leading-relaxed whitespace-pre-wrap">
-            {proposta.texto_mensagem}
-          </p>
-        )}
+        <div className="rounded-xl bg-cuidado-suave/60 px-4 py-3">
+          <p className="text-base font-semibold">{proposta.item_nome ?? proposta.resumo}</p>
+          {proposta.texto_mensagem && modo !== 'editar' && (
+            <p className="mt-2 rounded-lg bg-card px-3 py-2 text-[0.95rem] leading-relaxed whitespace-pre-wrap">
+              {proposta.texto_mensagem}
+            </p>
+          )}
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="flex flex-col gap-1">
-          <Rotulo>Justificativa</Rotulo>
-          <p className="text-sm leading-relaxed">{proposta.justificativa || 'Sem justificativa registrada.'}</p>
-          <div className="mt-1.5">
-            <Verificacao proposta={proposta} />
+      <div>
+        <button
+          type="button"
+          onClick={() => setPorQue((v) => !v)}
+          aria-expanded={porQue}
+          className="inline-flex items-center gap-1 text-sm font-semibold text-foreground/75 hover:text-foreground"
+        >
+          <ChevronDown className={cn('size-4 transition-transform', porQue && 'rotate-180')} aria-hidden />
+          Por que o Pulse sugeriu isso
+        </button>
+        {porQue && (
+          <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="flex flex-col gap-2">
+              <p className="text-sm leading-relaxed">{proposta.justificativa || 'Sem justificativa registrada.'}</p>
+              <p className="text-xs text-muted-foreground">Sugerido pelo {ESPECIALISTA[proposta.especialista]}</p>
+              <Verificacao proposta={proposta} />
+            </div>
+            <div className="flex flex-col gap-1">
+              <Rotulo>Fontes consultadas</Rotulo>
+              <Fontes proposta={proposta} />
+            </div>
           </div>
-        </div>
-        <div className="flex flex-col gap-1">
-          <Rotulo>Fontes</Rotulo>
-          <Fontes proposta={proposta} />
-        </div>
+        )}
       </div>
 
       {modo === 'editar' && (
@@ -276,7 +277,7 @@ function CartaoPendente({ proposta }: { proposta: Proposta }) {
             onClick={() => void concluir(() => api.aprovarProposta(proposta.id, profissional))}
           >
             <Check data-icon="inline-start" />
-            Aprovar e executar
+            Aprovar
           </Button>
           <Button size="lg" variant="outline" disabled={ocupado} onClick={() => setModo('editar')}>
             <Pencil data-icon="inline-start" />
@@ -298,13 +299,10 @@ function CartaoPendente({ proposta }: { proposta: Proposta }) {
               })
             }
           >
-            Ver rastro do caso
+            Ver como o Pulse decidiu
           </Button>
         </footer>
       )}
-      <p className="text-xs text-muted-foreground">
-        Nada é executado antes desta decisão. Decidindo como {profissional || 'ninguém selecionado'}.
-      </p>
       {erro && <p className="text-sm font-medium text-urgencia">{erro}</p>}
     </Cartao>
   )
@@ -336,9 +334,8 @@ export function AbaAprovacoes() {
   return (
     <div className="flex flex-col gap-4">
       {pendentes.length === 0 ? (
-        <Vazio icone={ClipboardCheck} titulo="Nenhuma proposta aguardando decisão">
-          Quando o Cuidado propõe uma ação, ela aparece aqui com o trecho literal do paciente e as fontes. Nada sai para
-          o paciente nem para o ACS antes da aprovação da equipe.
+        <Vazio icone={ClipboardCheck} titulo="Nada para aprovar agora">
+          Quando um paciente contar uma dificuldade, a sugestão do Pulse aparece aqui.
         </Vazio>
       ) : (
         pendentes.map((proposta) => <CartaoPendente key={proposta.id} proposta={proposta} />)
@@ -346,7 +343,7 @@ export function AbaAprovacoes() {
 
       {decididas.length > 0 && (
         <section>
-          <h3 className="mb-1.5 text-sm font-bold text-muted-foreground">Já decididas</h3>
+          <h3 className="mb-2 font-semibold text-muted-foreground">Histórico</h3>
           <ul className="rounded-xl border bg-card">
             {decididas.map((proposta) => (
               <LinhaDecidida key={proposta.id} proposta={proposta} />

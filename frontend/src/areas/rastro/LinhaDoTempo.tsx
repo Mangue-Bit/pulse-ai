@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Bot, ChevronDown, Cog, ListTree, ShieldCheck, User, Wrench, type LucideIcon } from 'lucide-react'
 
 import type { Ator, Evento } from '@/api'
-import { ChipDeEtapa, Etiqueta, Vazio } from '@/componentes/basicos'
+import { Etiqueta, Vazio } from '@/componentes/basicos'
 import { CLASSES, corDoEvento, nomeDaEtapa, ROTULO_DO_ATOR, travessia } from '@/fluxo'
 import { dolares, horaComSegundos, milissegundos, nomeDoCampo, valorLegivel } from '@/lib/formato'
 import { cn } from '@/lib/utils'
@@ -106,35 +106,23 @@ function LinhaDeEvento({ evento, ultimo }: { evento: Evento; ultimo: boolean }) 
         )}
       >
         <div className="flex items-center gap-2">
-          <ChipDeEtapa id={evento.etapa} cor={cor} />
-          <span className="min-w-0 flex-1 truncate text-sm font-semibold">{nomeDaEtapa(evento.etapa)}</span>
+          <span className="min-w-0 flex-1 truncate font-semibold">{nomeDaEtapa(evento.etapa)}</span>
           {decisao && (
-            <span className={cn('rounded px-1.5 text-xs font-bold', classes.suave, classes.texto)}>{decisao}</span>
+            <span className={cn('rounded-md px-1.5 text-xs font-bold', classes.suave, classes.texto)}>{decisao}</span>
           )}
+          <span className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-muted-foreground">
+            <Icone className="size-3.5" aria-hidden />
+            {ROTULO_DO_ATOR[evento.ator]}
+          </span>
           {temDetalhe && (
             <ChevronDown
-              className={cn('size-3.5 shrink-0 text-muted-foreground transition-transform', aberto && 'rotate-180')}
+              className={cn('size-4 shrink-0 text-muted-foreground transition-transform', aberto && 'rotate-180')}
               aria-hidden
             />
           )}
         </div>
-        {resumo && <p className="mt-1 text-[0.87rem] leading-snug text-foreground/85">{resumo}</p>}
-        <div className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-xs text-muted-foreground">
-          <span className="inline-flex items-center gap-1 font-medium">
-            <Icone className="size-3" aria-hidden />
-            {ROTULO_DO_ATOR[evento.ator]}
-          </span>
-          {evento.modelo && <span>{evento.modelo}</span>}
-          {evento.versao_prompt && <span>{evento.versao_prompt}</span>}
-          {evento.latencia_ms !== null && <span>{milissegundos(evento.latencia_ms)}</span>}
-          {evento.tokens_entrada !== null && (
-            <span>
-              {evento.tokens_entrada} + {evento.tokens_saida ?? 0} tokens
-            </span>
-          )}
-          {evento.custo !== null && evento.custo > 0 && <span>{dolares(evento.custo)}</span>}
-          {falhou && <Etiqueta cor="urgencia">chamada falhou: caminho humano</Etiqueta>}
-        </div>
+        {resumo && <p className="mt-0.5 text-[0.92rem] leading-snug text-foreground/80">{resumo}</p>}
+        {falhou && <Etiqueta cor="urgencia" className="mt-1">Falha no modelo: seguiu para a equipe</Etiqueta>}
       </button>
       <AnimatePresence initial={false}>
         {aberto && (
@@ -148,8 +136,18 @@ function LinhaDeEvento({ evento, ultimo }: { evento: Evento; ultimo: boolean }) 
             <div className="mx-2 mb-2 flex flex-col gap-2.5 rounded-lg border bg-card p-2.5">
               <Campos titulo="Entrada" dados={evento.entrada} />
               <Campos titulo="Saída" dados={evento.saida} />
-              <p className="text-xs text-muted-foreground">
-                Registrado às {horaComSegundos(evento.criado_em)}, evento {evento.id}
+              <p className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+                <span>Etapa {evento.etapa}</span>
+                <span>{horaComSegundos(evento.criado_em)}</span>
+                {evento.modelo && <span>{evento.modelo}</span>}
+                {evento.versao_prompt && <span>{evento.versao_prompt}</span>}
+                {evento.latencia_ms !== null && <span>{milissegundos(evento.latencia_ms)}</span>}
+                {evento.tokens_entrada !== null && (
+                  <span>
+                    {evento.tokens_entrada} + {evento.tokens_saida ?? 0} tokens
+                  </span>
+                )}
+                {evento.custo !== null && evento.custo > 0 && <span>{dolares(evento.custo)}</span>}
               </p>
             </div>
           </motion.div>
@@ -204,7 +202,7 @@ export function LinhaDoTempo({ eventos, vazio }: { eventos: Evento[]; vazio: str
         return (
           <section key={`${grupo.chave}-${primeiro.id}`}>
             <header className="mb-1 flex items-baseline justify-between gap-2 px-1">
-              <h3 className="text-[0.8rem] font-bold text-foreground/80">
+              <h3 className="font-serif text-base font-semibold">
                 {TITULO_DA_INTERACAO[primeiro.etapa] ?? nomeDaEtapa(primeiro.etapa)}
               </h3>
               <time className="text-xs text-muted-foreground">{horaComSegundos(primeiro.criado_em)}</time>

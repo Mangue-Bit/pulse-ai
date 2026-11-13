@@ -1,25 +1,10 @@
 import type { ComponentProps, ReactNode } from 'react'
 
-import { FlaskConical, type LucideIcon } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 
 import { CLASSES, corDaEtapa, type Cor } from '@/fluxo'
 import { prazoRelativo } from '@/lib/formato'
 import { cn } from '@/lib/utils'
-
-/** Selo discreto para tudo o que é simulado na demonstração. */
-export function Selo({ children = 'simulado', className }: { children?: ReactNode; className?: string }) {
-  return (
-    <span
-      className={cn(
-        'inline-flex items-center gap-1 rounded-full border border-dashed border-lateral/60 px-1.5 py-px text-[0.7rem] leading-4 font-medium text-lateral',
-        className,
-      )}
-    >
-      <FlaskConical className="size-3" aria-hidden />
-      {children}
-    </span>
-  )
-}
 
 /** Identificador de etapa do fluxo, na cor do grupo. */
 export function ChipDeEtapa({ id, cor, className }: { id: string; cor?: Cor; className?: string }) {
