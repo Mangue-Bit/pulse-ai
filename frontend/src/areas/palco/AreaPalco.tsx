@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 
 import { motion } from 'framer-motion'
-import { Check, ClipboardCheck, OctagonX, Route, Smartphone, Stethoscope } from 'lucide-react'
+import { Check, ClipboardCheck, OctagonX, RotateCcw, Route, Smartphone, Stethoscope } from 'lucide-react'
 
 import { CartaoDeAlerta } from '@/areas/equipe/AbaAlertas'
 import { CartaoPendente, LinhaDecidida } from '@/areas/equipe/AbaAprovacoes'
@@ -12,7 +12,9 @@ import { useConversa } from '@/areas/paciente/useConversa'
 import { LinhaDoTempo } from '@/areas/rastro/LinhaDoTempo'
 import { useRastro } from '@/areas/rastro/useRastro'
 import { Rotulo, Selecao, Vazio } from '@/componentes/basicos'
+import { Button } from '@/componentes/ui/button'
 import { useEstado, type OrigemDoRastro } from '@/estado'
+import { useAcao } from '@/lib/acao'
 import { cn } from '@/lib/utils'
 
 import { montarTrilha, type Passo, type TomDaTrilha } from './trilha'
@@ -112,7 +114,8 @@ function ColunaDaEquipe({ pacienteId }: { pacienteId: string }) {
 }
 
 export function AreaPalco() {
-  const { paciente, pacientes, escolherPaciente, conectado, atuando, irPara } = useEstado()
+  const { paciente, pacientes, escolherPaciente, conectado, atuando, irPara, reiniciarDemonstracao } = useEstado()
+  const reinicio = useAcao()
   const conversa = useConversa()
   const rastro = useRastro(AO_VIVO, paciente?.id ?? null, conectado)
   const trilha = useMemo(() => montarTrilha(rastro.visiveis), [rastro.visiveis])
@@ -141,7 +144,19 @@ export function AreaPalco() {
               </button>
             )
           })}
+          <span className="mx-1.5 h-6 w-px bg-border" aria-hidden />
+          <Button
+            variant="outline"
+            className="h-9 rounded-full px-3.5"
+            disabled={reinicio.ocupado || !conectado}
+            title="Apaga conversas, casos e decisões desta sessão e volta os pacientes ao estado inicial"
+            onClick={() => void reinicio.executar(reiniciarDemonstracao)}
+          >
+            <RotateCcw data-icon="inline-start" className={reinicio.ocupado ? 'animate-spin' : undefined} />
+            Recomeçar
+          </Button>
         </div>
+        {reinicio.erro && <p role="alert" className="w-full text-sm font-medium text-urgencia">{reinicio.erro}</p>}
       </header>
 
       <ol className="palco-trilha" aria-label="Etapas do atendimento">

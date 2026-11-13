@@ -48,7 +48,7 @@ function Suspenso({ aberto, aoFechar, children }: { aberto: boolean; aoFechar: (
 }
 
 export function BarraSuperior() {
-  const { conectado, relogio, agora, recarregarTudo, mostrarRastro } = useEstado()
+  const { conectado, relogio, agora, recarregarTudo, reiniciarDemonstracao } = useEstado()
   const [menu, setMenu] = useState(false)
   const [avancando, setAvancando] = useState(false)
   const [disparos, setDisparos] = useState<Disparo[] | null>(null)
@@ -73,10 +73,7 @@ export function BarraSuperior() {
   const reiniciar = async () => {
     setReiniciando(true)
     try {
-      await api.reiniciarDemonstracao()
-      mostrarRastro({ tipo: 'paciente' })
-      await relogio.recarregar()
-      recarregarTudo()
+      await reiniciarDemonstracao()
       setConfirmando(false)
     } catch {
       setDisparos([{ tipo: 'erro', descricao: 'A demonstração não foi reiniciada: sem conexão com o serviço.' }])
