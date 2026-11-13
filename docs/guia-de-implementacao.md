@@ -17,7 +17,7 @@ Este é o documento mestre do repositório. Ele define a arquitetura, os contrat
 |---|---|---|
 | Backend | Python 3.12, FastAPI, Pydantic | Contratos tipados e validação na borda |
 | Banco | SQLite com SQLModel | Um arquivo, sem serviço externo |
-| Modelo de linguagem | SDK `anthropic`, `claude-opus-5-5` | Saída estruturada com `client.messages.parse()` |
+| Modelo de linguagem | SDK `anthropic`, `claude-opus-5-5` | Saída estruturada com `client.beta.messages.parse()` |
 | Segundo modelo (verificador) | `claude-sonnet-5-5` | Verificação independente de quem gerou a proposta |
 | Recuperação (RAG) | BM25 com `rank_bm25` | Corpus pequeno e fechado, sem serviço de vetores |
 | Frontend | React, Vite, Tailwind, shadcn/ui, Framer Motion, Recharts | Uma tela, três áreas, atualização por consulta periódica |
@@ -30,11 +30,13 @@ Este é o documento mestre do repositório. Ele define a arquitetura, os contrat
 backend/
   app/
     main.py              # aplicação FastAPI e rotas
+    config.py            # configuração lida do ambiente
     contratos.py         # esquemas da seção 4
     banco.py             # tabelas e sessão
     relogio.py           # relógio do sistema (pode ser avançado)
     rastro.py            # registrar_evento()
     modelo.py            # cliente único do modelo de linguagem
+    modelo_simulado.py   # cliente simulado, usado sem chave e nos testes
     regras/              # urgência, catálogo, risco do item, limites
     escuta/              # E01 a E13
     urgencia/            # U01 a U05
@@ -209,9 +211,10 @@ Todas as chamadas passam por `app/modelo.py`, que aplica a saída estruturada, r
 Regras de uso:
 
 - **Regras rodam antes do modelo.** Em E03, se a regra de urgência dispara, o caso vai para U01 sem consultar o modelo. Se a regra não dispara e o modelo indica urgência, também vai. Na dúvida, sim.
-- **Saída estruturada:** `client.messages.parse(model=..., max_tokens=..., messages=..., output_format=Esquema)`, lendo `response.parsed_output`. Barreira e item do catálogo são enumerações: o modelo não consegue inventar um valor fora da lista.
-- **Chamada de ferramenta (ponto 3):** as ferramentas são declaradas com `strict: true` e `tool_choice` automático. O bloco `tool_use` devolvido vira uma `Proposta` e não é executado. Se o modelo não chamar ferramenta, o caso segue para C17 (tarefa manual).
-- **Recusa e erro:** o cliente confere `stop_reason` antes de ler o conteúdo. Recusa, erro de rede ou saída inválida nunca viram resposta ao paciente: o caso segue para o caminho humano (E07 na Escuta, C17 no Cuidado). O cliente liga o fallback do servidor (`betas=["server-side-fallback-2026-07-01"]`, `fallbacks="default"`).
+- **Saída estruturada:** `client.beta.messages.parse(model=..., max_tokens=..., system=..., messages=..., output_format=Esquema, output_config={"effort": ...})`, lendo `response.parsed_output`. Barreira e item do catálogo são enumerações: o modelo não consegue inventar um valor fora da lista. O esforço de cada ponto é definido em `output_config.effort`; nos modelos atuais o raciocínio fica sempre ligado e não há parâmetro para desligá-lo.
+- **Chamada de ferramenta (ponto 3):** `client.beta.messages.create(...)`, com as ferramentas declaradas com `strict: true` e `tool_choice` automático (os modelos atuais recusam a escolha forçada de ferramenta). O bloco `tool_use` devolvido vira uma `Proposta` e não é executado. Se o modelo não chamar ferramenta, o caso segue para C17 (tarefa manual).
+- **Recusa e erro:** o cliente confere `stop_reason` antes de ler o conteúdo. Recusa, erro de rede ou saída inválida nunca viram resposta ao paciente: o caso segue para o caminho humano (E07 na Escuta, C17 no Cuidado). O cliente liga o fallback do servidor (`betas=["server-side-fallback-2026-07-01"]`, `fallbacks="default"`), que só existe no caminho `client.beta.messages`; por isso todas as chamadas usam esse caminho.
+- **Cliente simulado:** sem `ANTHROPIC_API_KEY`, ou com `PULSE_MODELO_SIMULADO=1`, `app/modelo.py` usa `app/modelo_simulado.py`, que responde por heurísticas determinísticas no mesmo esquema de saída. Os eventos gravados assim levam o modelo `simulado-local`, e a tela mostra o selo "modelo simulado".
 - **Frase sem fonte não entra:** depois do ponto 4, o código descarta toda frase cujo `fonte_id` não esteja entre os trechos recuperados.
 - **Prompts versionados:** um arquivo por ponto em `app/prompts/`, com a versão no nome (`interpretar_relato.v1.md`). A versão vai para o evento.
 
@@ -326,7 +329,7 @@ O trabalho se divide em três grupos. A Base é feita em conjunto. A Frente A cu
 
 - **Ramos:** `main` sempre sobe. Cada pacote entra por um ramo curto com o nome do pacote (`seg-3-interpretacao`).
 - **Commits:** pequenos, em português, começando pelo pacote (`SEG-3: interpreta o relato com saída estruturada`).
-- **Segredos:** só em `.env`, que não é versionado. O `.env.example` lista as variáveis: `ANTHROPIC_API_KEY`, `PULSE_MODELO`, `PULSE_MODELO_VERIFICADOR`, `PULSE_BANCO`.
+- **Segredos:** só em `.env`, que não é versionado. O `.env.example` lista as variáveis: `ANTHROPIC_API_KEY`, `PULSE_MODELO`, `PULSE_MODELO_VERIFICADOR`, `PULSE_BANCO`, `PULSE_MODELO_SIMULADO`.
 - **Dados:** apenas sintéticos. Nenhum dado real de paciente entra no repositório.
 - **Nomes:** os termos do código seguem os do fluxo (relato, barreira, proposta, aceite, rodada).
 - **Testes:** toda regra de segurança (urgência, aceite, filtro, chave única) tem teste antes de ser ligada ao fluxo.
