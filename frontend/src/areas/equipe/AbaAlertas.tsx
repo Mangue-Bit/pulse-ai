@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { BellOff, Check, ChevronRight, Siren } from 'lucide-react'
 
 import { api, type Alerta } from '@/api'
-import { Cartao, Etiqueta, Prazo, Rotulo, TrechoLiteral, Vazio } from '@/componentes/basicos'
+import { Cartao, Etiqueta, Prazo, TrechoLiteral, Vazio } from '@/componentes/basicos'
 import { Button } from '@/componentes/ui/button'
 import { useEstado } from '@/estado'
 import { useAcao } from '@/lib/acao'
@@ -13,9 +13,9 @@ import { cn } from '@/lib/utils'
 const CADEIA = ['plantao', 'enfermeiro', 'gestor'] as const
 
 const ORIGEM: Record<Alerta['origem'], string> = {
-  escuta: 'Sinal de urgência na conversa (E03)',
-  cuidado: 'Sinal de alarme na segunda checagem (C05)',
-  duvida_vencida: 'Dúvida clínica sem resposta no prazo (C07)',
+  escuta: 'Percebido na conversa',
+  cuidado: 'Percebido na revisão do caso',
+  duvida_vencida: 'Dúvida sem resposta no prazo',
 }
 
 const ORDEM: Record<Alerta['status'], number> = { pendencia_critica: 0, aberto: 1, confirmado: 2, encerrado: 3 }
@@ -60,7 +60,7 @@ function Cadeia({ alerta }: { alerta: Alerta }) {
   )
 }
 
-function CartaoDeAlerta({ alerta }: { alerta: Alerta }) {
+export function CartaoDeAlerta({ alerta }: { alerta: Alerta }) {
   const { atuando, agora, alertas, pacientes } = useEstado()
   const { executar, ocupado, erro } = useAcao()
   const [falsoPositivo, setFalsoPositivo] = useState(false)
@@ -71,7 +71,7 @@ function CartaoDeAlerta({ alerta }: { alerta: Alerta }) {
   const depois = () => Promise.all([alertas.recarregar(), pacientes.recarregar()])
 
   return (
-    <Cartao className={cn('flex flex-col gap-3', critica && 'border-2 border-urgencia', aberto && 'border-urgencia/60')}>
+    <Cartao className={cn('flex flex-col gap-3 p-5 shadow-sm', critica && 'border-2 border-urgencia', aberto && 'border-urgencia/60')}>
       <header className="flex flex-wrap items-center gap-2">
         <Siren className={cn('size-5', alerta.status === 'encerrado' ? 'text-muted-foreground' : 'text-urgencia')} aria-hidden />
         <h3 className="text-base font-bold">{alerta.paciente_nome}</h3>
@@ -84,23 +84,17 @@ function CartaoDeAlerta({ alerta }: { alerta: Alerta }) {
 
       <TrechoLiteral>{alerta.trecho_literal}</TrechoLiteral>
 
-      <div className="grid grid-cols-2 gap-3 text-sm">
-        <div>
-          <Rotulo>Origem</Rotulo>
-          <p>{ORIGEM[alerta.origem]}</p>
-        </div>
-        <div>
-          <Rotulo>Regra que disparou</Rotulo>
-          <p>{alerta.regra === 'modelo' ? 'Indicação do modelo, sem regra' : alerta.regra.replaceAll('_', ' ')}</p>
-        </div>
-      </div>
+      <p className="text-sm text-muted-foreground">
+        {ORIGEM[alerta.origem]}
+        {alerta.regra !== 'modelo' && `: ${alerta.regra.replaceAll('_', ' ')}`}
+      </p>
 
       <Cadeia alerta={alerta} />
 
       {critica && (
         <p className="rounded-lg bg-urgencia-suave px-3 py-2 text-sm font-medium text-urgencia">
-          A cadeia terminou sem confirmação. O paciente recebeu de novo a orientação de ligar 192 ou ir à UPA, o caso
-          está no topo da fila do próximo turno e o ACS tem visita prioritária marcada.
+          Ninguém confirmou a tempo. O paciente foi orientado de novo a ligar 192 e o agente comunitário tem visita
+          prioritária marcada.
         </p>
       )}
 
@@ -159,9 +153,8 @@ export function AbaAlertas() {
 
   if (lista.length === 0) {
     return (
-      <Vazio icone={BellOff} titulo="Nenhum alerta de urgência">
-        Quando uma mensagem traz sinal de urgência, o paciente recebe na hora a orientação fixa de emergência e o alerta
-        aparece aqui, um nível da equipe por vez. Nenhum agente decide nesta trilha.
+      <Vazio icone={BellOff} titulo="Nenhum alerta agora">
+        Quando um paciente relatar um sinal de urgência, o alerta aparece aqui.
       </Vazio>
     )
   }

@@ -1,25 +1,10 @@
 import type { ComponentProps, ReactNode } from 'react'
 
-import { FlaskConical, type LucideIcon } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 
 import { CLASSES, corDaEtapa, type Cor } from '@/fluxo'
 import { prazoRelativo } from '@/lib/formato'
 import { cn } from '@/lib/utils'
-
-/** Selo discreto para tudo o que é simulado na demonstração. */
-export function Selo({ children = 'simulado', className }: { children?: ReactNode; className?: string }) {
-  return (
-    <span
-      className={cn(
-        'inline-flex items-center gap-1 rounded-full border border-dashed border-lateral/60 px-1.5 py-px text-[0.7rem] leading-4 font-medium text-lateral',
-        className,
-      )}
-    >
-      <FlaskConical className="size-3" aria-hidden />
-      {children}
-    </span>
-  )
-}
 
 /** Identificador de etapa do fluxo, na cor do grupo. */
 export function ChipDeEtapa({ id, cor, className }: { id: string; cor?: Cor; className?: string }) {
@@ -54,12 +39,12 @@ export function Etiqueta({ cor, children, className }: { cor: Cor; children: Rea
   )
 }
 
-/** A fala literal do paciente: dado, nunca instrução. Vem em serifa para se distinguir do texto do sistema. */
+/** A fala literal do paciente: dado, nunca instrução. Vem em itálico e entre aspas para se distinguir do texto do sistema. */
 export function TrechoLiteral({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <blockquote
       className={cn(
-        'border-l-[3px] border-escuta bg-escuta-suave/60 py-2 pr-3 pl-3 font-serif text-[1.05rem] leading-snug text-foreground italic',
+        'rounded-r-lg border-l-[3px] border-marca bg-marca-suave/70 py-2 pr-3 pl-3 text-[1.02rem] leading-snug font-medium text-foreground italic',
         className,
       )}
     >
@@ -68,7 +53,7 @@ export function TrechoLiteral({ children, className }: { children: ReactNode; cl
   )
 }
 
-export function Vazio({ icone: Icone, titulo, children }: { icone: LucideIcon; titulo: string; children?: ReactNode }) {
+export function Vazio({ icone: Icone, titulo, children, acao }: { icone: LucideIcon; titulo: string; children?: ReactNode; acao?: ReactNode }) {
   return (
     <div className="flex flex-col items-center gap-2 px-6 py-12 text-center">
       <span className="flex size-11 items-center justify-center rounded-full bg-muted text-muted-foreground">
@@ -76,6 +61,7 @@ export function Vazio({ icone: Icone, titulo, children }: { icone: LucideIcon; t
       </span>
       <p className="text-base font-semibold">{titulo}</p>
       {children && <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">{children}</p>}
+      {acao && <div className="mt-2">{acao}</div>}
     </div>
   )
 }

@@ -4,7 +4,7 @@ import { BarChart3, FileText, MapPinned } from 'lucide-react'
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 import { api } from '@/api'
-import { Cartao, Selecao, Selo, Vazio } from '@/componentes/basicos'
+import { Cartao, Selecao, Vazio } from '@/componentes/basicos'
 import { useEstado } from '@/estado'
 import { useConsulta } from '@/lib/consulta'
 import { diaEHora, porcento } from '@/lib/formato'
@@ -50,15 +50,9 @@ export function AbaTerritorio() {
         )}
       </div>
 
-      <p className="rounded-lg bg-cuidado-suave/60 px-3 py-2 text-sm leading-relaxed">
-        Visão do ACS: lista nominal priorizada. As contagens e os prazos vêm das regras; o Agente de Território só ordena
-        e explica o motivo, sem escore clínico.
-      </p>
-
       {!dados || dados.lista.length === 0 ? (
-        <Vazio icone={MapPinned} titulo="Lista ainda não gerada para esta microárea">
-          A lista priorizada é montada pelo Agente de Território na checagem por tempo e só vale depois de aprovada pela
-          equipe. Avance o relógio do sistema para disparar a checagem.
+        <Vazio icone={MapPinned} titulo="Lista ainda não montada">
+          A lista é montada na revisão diária. Avance o relógio em um dia, pelo menu do horário, para gerá-la.
         </Vazio>
       ) : (
         <ol className="flex flex-col gap-2">
@@ -77,12 +71,9 @@ export function AbaTerritorio() {
                       <p className="text-sm leading-snug text-foreground/85">{item.motivo}</p>
                     </div>
                     {paciente && (
-                      <div className="flex shrink-0 flex-col items-end gap-1 text-right">
-                        <p className="text-sm">
-                          Risco de abandono <strong>{porcento(paciente.risco_abandono)}</strong>
-                        </p>
-                        <Selo>nota sintética</Selo>
-                      </div>
+                      <p className="shrink-0 text-right text-sm text-muted-foreground">
+                        Risco de abandono <strong className="text-foreground">{porcento(paciente.risco_abandono)}</strong>
+                      </p>
                     )}
                   </Cartao>
                 </li>
@@ -103,9 +94,8 @@ export function AbaRelatorios() {
 
   if (relatorios.length === 0) {
     return (
-      <Vazio icone={FileText} titulo="Nenhum relatório salvo">
-        O Agente de Relatório redige a partir do registro do ACS e do histórico. Cada frase leva a fonte, e frase sem
-        fonte é descartada pelo código. O relatório aparece aqui depois da aprovação da equipe.
+      <Vazio icone={FileText} titulo="Nenhum relatório ainda">
+        Os relatórios aparecem aqui depois que a equipe aprova.
       </Vazio>
     )
   }
@@ -155,7 +145,7 @@ export function AbaGestor() {
   if (!dados || dados.microareas.length === 0) {
     return (
       <Vazio icone={BarChart3} titulo="Sem números para mostrar">
-        A visão do gestor é agregada na consulta, por microárea e sem nomes. Ela aparece quando o serviço responder.
+        Os números aparecem quando o serviço responder.
       </Vazio>
     )
   }
@@ -170,11 +160,6 @@ export function AbaGestor() {
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="rounded-lg bg-muted px-3 py-2 text-sm leading-relaxed">
-        Visão agregada na consulta: números por microárea, sem nome de paciente. As contagens vêm das regras, nunca do
-        modelo.
-      </p>
-
       <div className="grid grid-cols-4 gap-2">
         {[
           { nome: 'Pacientes acompanhados', valor: dados.totais.pacientes },
@@ -241,10 +226,6 @@ export function AbaGestor() {
             </tr>
           </tbody>
         </table>
-      </div>
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Selo>nota sintética</Selo>
-        A coluna de alto risco usa a nota de risco de abandono sintética, no lugar do modelo treinado.
       </div>
     </div>
   )

@@ -265,7 +265,7 @@ Uma tela com três áreas e uma barra superior.
 | Equipe (centro) | Abas: Alertas, Dúvidas, Aprovações, Casos, ACS, Território, Relatórios, Gestor |
 | Rastro (direita) | Linha do tempo do caso com as etapas acendendo. Segunda aba: mapa completo do fluxo com o caminho percorrido. Terceira aba: indicadores |
 
-- As cores seguem o fluxograma: azul para a Escuta, vermelho para a urgência, roxo para o Cuidado, laranja para decisões da equipe, verde para o concluído.
+- As cores seguem a identidade do Pulse: violeta para a Escuta, vermelho para a urgência, azul-petróleo para o Cuidado, laranja para decisões da equipe, verde para o concluído.
 - A tela lê o rastro pelo identificador de etapa. Qualquer etapa que registre evento aparece na linha do tempo e no mapa sem código extra.
 - **Reprodução de rastro:** a tela consegue reexibir os eventos gravados de um caso. Serve para investigar uma resposta ruim e para desenvolver a interface sem depender do backend.
 - Tema claro, fonte grande e leitura confortável em 1366×768.
