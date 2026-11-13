@@ -74,8 +74,8 @@ function Bloco({ titulo, icone: Icone, tom, children }: { titulo: string; icone:
   )
 }
 
-function Confirmacao({ destino }: { destino: Destino }) {
-  if (destino === 'enviado') {
+function Confirmacao({ destino, fila }: { destino: Destino; fila: FilaDeEnvio }) {
+  if (destino === 'enviado' || fila.fila.length === 0) {
     return (
       <p role="status" className="flex items-center gap-2 rounded-xl bg-concluido-suave px-3 py-2.5 font-semibold text-concluido">
         <CircleCheck className="size-5 shrink-0" aria-hidden />
@@ -224,7 +224,7 @@ function Resultado({ visita, acs, fila, aoMudar }: PropsDoFormulario) {
   if (destino) {
     return (
       <Bloco titulo="Resultado da ajuda" icone={CircleCheck} tom="text-concluido">
-        <Confirmacao destino={destino} />
+        <Confirmacao destino={destino} fila={fila} />
       </Bloco>
     )
   }
@@ -316,7 +316,7 @@ function Registro({ visita, acs, fila, aoMudar }: PropsDoFormulario) {
       </div>
       <CampoDeTexto valor={texto} aoMudar={escrever} rotuloDoCampo="O que aconteceu" exemplo="O que foi visto ou combinado" />
       <div className="sticky bottom-0 -mx-4 -mb-4 mt-1 flex flex-col gap-2 rounded-b-2xl bg-card px-4 pt-2 pb-4">
-        {destino && <Confirmacao destino={destino} />}
+        {destino && <Confirmacao destino={destino} fila={fila} />}
         <BotaoPrincipal
           disabled={ocupado || !texto.trim()}
           onClick={() =>
