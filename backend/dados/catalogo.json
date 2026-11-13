@@ -1,0 +1,113 @@
+{
+  "aviso": "Catálogo sintético para demonstração. Os textos são modelos de exemplo e precisam de validação da equipe de saúde antes de qualquer uso real.",
+  "itens": [
+    {
+      "id": "audio_explicar_receita",
+      "nome": "Mensagem em áudio oferecendo leitura da receita com a equipe",
+      "barreiras": ["analfabetismo"],
+      "ferramenta": "enviar_mensagem",
+      "risco": "alto",
+      "exige_aceite": true,
+      "canal_preferido": "audio",
+      "modelo_de_mensagem": "Olá, {nome}. Aqui é da equipe da sua unidade de saúde. Recebemos o seu recado sobre a dificuldade para ler a receita. Você pode levar a receita e as caixas dos remédios à unidade, que alguém da equipe lê e explica com você, com calma, quantas vezes precisar. Se for difícil ir até a unidade, responda este áudio que a gente combina uma visita de {acs}, agente de saúde da sua área.",
+      "taxa_sucesso": 0.64,
+      "amostra": 25
+    },
+    {
+      "id": "visita_organizar_remedios",
+      "nome": "Visita do ACS para organizar os remédios com marcação visual dos horários",
+      "barreiras": ["analfabetismo", "muitos_medicamentos"],
+      "ferramenta": "criar_tarefa_acs",
+      "risco": "alto",
+      "exige_aceite": false,
+      "canal_preferido": "presencial",
+      "modelo_de_mensagem": "Visitar {nome} para organizar os remédios conforme a receita, marcando cada caixa com um desenho do horário (manhã, tarde, noite). Conferir se a pessoa reconhece cada caixa ao final.",
+      "taxa_sucesso": 0.71,
+      "amostra": 14
+    },
+    {
+      "id": "mensagem_quadro_de_horarios",
+      "nome": "Mensagem oferecendo um quadro simples de horários",
+      "barreiras": ["muitos_medicamentos"],
+      "ferramenta": "enviar_mensagem",
+      "risco": "alto",
+      "exige_aceite": true,
+      "canal_preferido": "texto",
+      "modelo_de_mensagem": "Olá, {nome}. Aqui é da equipe da sua unidade de saúde. Para facilitar o dia a dia com vários remédios, a equipe pode montar com você um quadro simples com os horários, do jeito que está na sua receita. Leve as caixas e a receita à unidade ou responda esta mensagem para combinarmos.",
+      "taxa_sucesso": 0.52,
+      "amostra": 21
+    },
+    {
+      "id": "visita_identificar_apoio",
+      "nome": "Visita do ACS para identificar quem pode apoiar a rotina dos remédios",
+      "barreiras": ["rede_de_apoio"],
+      "ferramenta": "criar_tarefa_acs",
+      "risco": "alto",
+      "exige_aceite": false,
+      "canal_preferido": "presencial",
+      "modelo_de_mensagem": "Visitar {nome} para identificar um familiar, vizinho ou cuidador que possa apoiar a rotina dos remédios, e combinar com a pessoa como esse apoio vai acontecer.",
+      "taxa_sucesso": 0.58,
+      "amostra": 12
+    },
+    {
+      "id": "mensagem_apoio_da_equipe",
+      "nome": "Mensagem oferecendo acompanhamento mais próximo do ACS",
+      "barreiras": ["rede_de_apoio"],
+      "ferramenta": "enviar_mensagem",
+      "risco": "alto",
+      "exige_aceite": true,
+      "canal_preferido": "texto",
+      "modelo_de_mensagem": "Olá, {nome}. Aqui é da equipe da sua unidade de saúde. Você não precisa cuidar do tratamento sem ajuda: {acs}, agente de saúde da sua área, acompanha você de perto. Responda esta mensagem dizendo o melhor dia para uma visita.",
+      "taxa_sucesso": 0.41,
+      "amostra": 17
+    },
+    {
+      "id": "mensagem_retirada_de_remedios",
+      "nome": "Mensagem orientando a procurar a farmácia da unidade com a receita",
+      "barreiras": ["acesso_a_remedios"],
+      "ferramenta": "enviar_mensagem",
+      "risco": "alto",
+      "exige_aceite": true,
+      "canal_preferido": "texto",
+      "modelo_de_mensagem": "Olá, {nome}. Aqui é da equipe da sua unidade de saúde. Soubemos da dificuldade para conseguir o remédio. A farmácia da unidade confere a sua receita e orienta onde retirar. Passe na unidade com a receita e um documento, ou responda esta mensagem para a gente ajudar.",
+      "taxa_sucesso": 0.67,
+      "amostra": 30
+    },
+    {
+      "id": "visita_verificar_acesso",
+      "nome": "Visita do ACS para entender por que o remédio faltou",
+      "barreiras": ["acesso_a_remedios"],
+      "ferramenta": "criar_tarefa_acs",
+      "risco": "alto",
+      "exige_aceite": false,
+      "canal_preferido": "presencial",
+      "modelo_de_mensagem": "Visitar {nome} para entender por que o remédio faltou (receita vencida, falta na unidade, distância ou custo) e orientar a retirada na farmácia da unidade.",
+      "taxa_sucesso": 0.6,
+      "amostra": 8
+    },
+    {
+      "id": "mensagem_conversa_antes_de_parar",
+      "nome": "Mensagem convidando para conversar com a equipe antes de mudar o tratamento",
+      "barreiras": ["percepcao_de_melhora"],
+      "ferramenta": "enviar_mensagem",
+      "risco": "alto",
+      "exige_aceite": true,
+      "canal_preferido": "texto",
+      "modelo_de_mensagem": "Olá, {nome}. Aqui é da equipe da sua unidade de saúde. Que bom saber que você está se sentindo bem. Antes de mudar qualquer coisa no tratamento, converse com a equipe: marque uma conversa na unidade ou responda esta mensagem.",
+      "taxa_sucesso": 0.49,
+      "amostra": 23
+    },
+    {
+      "id": "visita_conversa_sobre_tratamento",
+      "nome": "Visita do ACS para conversar sobre a continuidade do tratamento",
+      "barreiras": ["percepcao_de_melhora"],
+      "ferramenta": "criar_tarefa_acs",
+      "risco": "alto",
+      "exige_aceite": false,
+      "canal_preferido": "presencial",
+      "modelo_de_mensagem": "Visitar {nome} para ouvir por que deixou de usar os remédios e convidar para uma conversa com a equipe na unidade antes de qualquer mudança no tratamento.",
+      "taxa_sucesso": 0.55,
+      "amostra": 11
+    }
+  ]
+}

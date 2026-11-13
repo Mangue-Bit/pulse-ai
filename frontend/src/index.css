@@ -1,0 +1,126 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import '@fontsource-variable/figtree';
+@import '@fontsource-variable/fraunces';
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Superfícies e tinta */
+  --background: #eef1f5;
+  --foreground: #18212f;
+  --card: #ffffff;
+  --card-foreground: #18212f;
+  --popover: #ffffff;
+  --popover-foreground: #18212f;
+  --primary: #1d2b4a;
+  --primary-foreground: #ffffff;
+  --secondary: #e6eaf0;
+  --secondary-foreground: #18212f;
+  --muted: #e9edf2;
+  --muted-foreground: #586377;
+  --accent: #e6eaf0;
+  --accent-foreground: #18212f;
+  --destructive: #c9302f;
+  --border: #d5dbe4;
+  --input: #c6cdd8;
+  --ring: #5b7bd6;
+  --radius: 0.625rem;
+
+  /* Cores do fluxograma */
+  --escuta: #2463c8;
+  --escuta-suave: #e4edfb;
+  --urgencia: #c9302f;
+  --urgencia-suave: #fde8e6;
+  --cuidado: #7448c9;
+  --cuidado-suave: #efe8fb;
+  --equipe: #c96a0a;
+  --equipe-suave: #fdefd9;
+  --concluido: #23874f;
+  --concluido-suave: #def3e6;
+  --lateral: #6c7686;
+  --lateral-suave: #e8ebef;
+}
+
+@theme inline {
+  --font-sans: 'Figtree Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: 'Fraunces Variable', ui-serif, Georgia, serif;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-escuta: var(--escuta);
+  --color-escuta-suave: var(--escuta-suave);
+  --color-urgencia: var(--urgencia);
+  --color-urgencia-suave: var(--urgencia-suave);
+  --color-cuidado: var(--cuidado);
+  --color-cuidado-suave: var(--cuidado-suave);
+  --color-equipe: var(--equipe);
+  --color-equipe-suave: var(--equipe-suave);
+  --color-concluido: var(--concluido);
+  --color-concluido-suave: var(--concluido-suave);
+  --color-lateral: var(--lateral);
+  --color-lateral-suave: var(--lateral-suave);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+    outline-color: color-mix(in oklab, var(--ring) 50%, transparent);
+  }
+
+  html {
+    font-size: 15px;
+  }
+
+  body {
+    margin: 0;
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-feature-settings: 'tnum' 1;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+
+/* Barras de rolagem discretas dentro das áreas */
+.rolagem {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #c3cad6 transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
