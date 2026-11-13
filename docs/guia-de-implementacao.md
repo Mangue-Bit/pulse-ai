@@ -17,8 +17,8 @@ Este é o documento mestre do repositório. Ele define a arquitetura, os contrat
 |---|---|---|
 | Backend | Python 3.12, FastAPI, Pydantic | Contratos tipados e validação na borda |
 | Banco | SQLite com SQLModel | Um arquivo, sem serviço externo |
-| Modelo de linguagem | SDK `anthropic`, `claude-opus-5-5` | Saída estruturada com `client.beta.messages.parse()` |
-| Segundo modelo (verificador) | `claude-sonnet-5-5` | Verificação independente de quem gerou a proposta |
+| Modelo de linguagem | SDK `groq`, `openai/gpt-oss-120b` | Saída estruturada em modo estrito e chamada de ferramentas, com baixa latência |
+| Segundo modelo (verificador) | Definido em `PULSE_MODELO_VERIFICADOR` | Verificação separada de quem gerou a proposta |
 | Recuperação (RAG) | BM25 com `rank_bm25` | Corpus pequeno e fechado, sem serviço de vetores |
 | Frontend | React, Vite, Tailwind, shadcn/ui, Framer Motion, Recharts | Uma tela, três áreas, atualização por consulta periódica |
 | Voz | API de voz do navegador (reconhecimento e leitura) | Entrada e resposta em áudio sem serviço externo |
@@ -201,20 +201,20 @@ Todas as chamadas passam por `app/modelo.py`, que aplica a saída estruturada, r
 
 | Nº | Etapas | Entrada | Saída estruturada | Modelo |
 |---|---|---|---|---|
-| 1 | E03, E06, E08, E10 | Texto normalizado, em bloco de dado | `urgencia`, `entendivel`, `duvida_clinica`, `tipo`, `barreira`, `trecho_literal`, `certeza`, `lembrete` | `claude-opus-5-5`, esforço baixo |
-| 2 | C13, C15 | Estado do caso, tipo de entrada, contexto | `especialistas[]`, `informacao_faltante` | `claude-opus-5-5` |
-| 3 | I03 | Fator de risco, itens permitidos, contexto | Chamada de uma das quatro ferramentas, com `item_catalogo_id`, `justificativa` e `fontes` | `claude-opus-5-5` |
-| 4 | R02, R03 | Registro do ACS, relatórios anteriores, trechos com fonte | `frases[]`, cada uma com `texto` e `fonte_id` | `claude-opus-5-5` |
-| 5 | T02 | Quadro por microárea calculado pelas regras | `prioridades[]`, cada uma com `paciente_id`, `posicao` e `motivo` | `claude-opus-5-5` |
-| 6 | C18 | Proposta consolidada e fontes | `aprovada`, `motivos[]` | `claude-sonnet-5-5` |
+| 1 | E03, E06, E08, E10 | Texto normalizado, em bloco de dado | `urgencia`, `entendivel`, `duvida_clinica`, `tipo`, `barreira`, `trecho_literal`, `certeza`, `lembrete` | `PULSE_MODELO`, esforço baixo |
+| 2 | C13, C15 | Estado do caso, tipo de entrada, contexto | `especialistas[]`, `informacao_faltante` | `PULSE_MODELO` |
+| 3 | I03 | Fator de risco, itens permitidos, contexto | Chamada de uma das quatro ferramentas, com `item_catalogo_id`, `justificativa` e `fontes` | `PULSE_MODELO` |
+| 4 | R02, R03 | Registro do ACS, relatórios anteriores, trechos com fonte | `frases[]`, cada uma com `texto` e `fonte_id` | `PULSE_MODELO` |
+| 5 | T02 | Quadro por microárea calculado pelas regras | `prioridades[]`, cada uma com `paciente_id`, `posicao` e `motivo` | `PULSE_MODELO` |
+| 6 | C18 | Proposta consolidada e fontes | `aprovada`, `motivos[]` | `PULSE_MODELO_VERIFICADOR` |
 
 Regras de uso:
 
 - **Regras rodam antes do modelo.** Em E03, se a regra de urgência dispara, o caso vai para U01 sem consultar o modelo. Se a regra não dispara e o modelo indica urgência, também vai. Na dúvida, sim.
-- **Saída estruturada:** `client.beta.messages.parse(model=..., max_tokens=..., system=..., messages=..., output_format=Esquema, output_config={"effort": ...})`, lendo `response.parsed_output`. Barreira e item do catálogo são enumerações: o modelo não consegue inventar um valor fora da lista. O esforço de cada ponto é definido em `output_config.effort`; nos modelos atuais o raciocínio fica sempre ligado e não há parâmetro para desligá-lo.
-- **Chamada de ferramenta (ponto 3):** `client.beta.messages.create(...)`, com as ferramentas declaradas com `strict: true` e `tool_choice` automático (os modelos atuais recusam a escolha forçada de ferramenta). O bloco `tool_use` devolvido vira uma `Proposta` e não é executado. Se o modelo não chamar ferramenta, o caso segue para C17 (tarefa manual).
-- **Recusa e erro:** o cliente confere `stop_reason` antes de ler o conteúdo. Recusa, erro de rede ou saída inválida nunca viram resposta ao paciente: o caso segue para o caminho humano (E07 na Escuta, C17 no Cuidado). O cliente liga o fallback do servidor (`betas=["server-side-fallback-2026-07-01"]`, `fallbacks="default"`), que só existe no caminho `client.beta.messages`; por isso todas as chamadas usam esse caminho.
-- **Cliente simulado:** sem `ANTHROPIC_API_KEY`, ou com `PULSE_MODELO_SIMULADO=1`, `app/modelo.py` usa `app/modelo_simulado.py`, que responde por heurísticas determinísticas no mesmo esquema de saída. Os eventos gravados assim levam o modelo `simulado-local`, e a tela mostra o selo "modelo simulado".
+- **Saída estruturada:** `client.chat.completions.create(model=..., messages=..., response_format={"type": "json_schema", "json_schema": {"name": ..., "strict": True, "schema": ...}})`. No modo estrito a Groq restringe a geração ao esquema: todo objeto leva `additionalProperties: false`, todos os campos são obrigatórios e campo opcional é união com nulo. O esquema sai do modelo Pydantic do ponto de chamada, e a resposta é validada de novo por ele. Barreira e item do catálogo são enumerações: o modelo não consegue inventar um valor fora da lista. O esforço de raciocínio de cada ponto vai em `reasoning_effort`.
+- **Chamada de ferramenta (ponto 3):** as ferramentas são declaradas em `tools`, com `tool_choice="auto"`. Na Groq, a saída estruturada e as ferramentas não se combinam na mesma chamada, então o ponto 3 usa só ferramentas, e o código valida os argumentos devolvidos. O `tool_calls` devolvido vira uma `Proposta` e não é executado. Se o modelo não chamar ferramenta, o caso segue para C17 (tarefa manual).
+- **Recusa e erro:** o cliente confere `finish_reason` antes de ler o conteúdo. Filtro de conteúdo, saída cortada, erro de rede, erro da API ou saída fora do esquema nunca viram resposta ao paciente: o caso segue para o caminho humano (E07 na Escuta, C17 no Cuidado).
+- **Cliente simulado:** sem `GROQ_API_KEY`, ou com `PULSE_MODELO_SIMULADO=1`, `app/modelo.py` usa `app/modelo_simulado.py`, que responde por heurísticas determinísticas no mesmo esquema de saída. Os eventos gravados assim levam o modelo `simulado-local`, e a tela mostra o selo "modelo simulado".
 - **Frase sem fonte não entra:** depois do ponto 4, o código descarta toda frase cujo `fonte_id` não esteja entre os trechos recuperados.
 - **Prompts versionados:** um arquivo por ponto em `app/prompts/`, com a versão no nome (`interpretar_relato.v1.md`). A versão vai para o evento.
 
@@ -329,7 +329,7 @@ O trabalho se divide em três grupos. A Base é feita em conjunto. A Frente A cu
 
 - **Ramos:** `main` sempre sobe. Cada pacote entra por um ramo curto com o nome do pacote (`seg-3-interpretacao`).
 - **Commits:** pequenos, em português, começando pelo pacote (`SEG-3: interpreta o relato com saída estruturada`).
-- **Segredos:** só em `.env`, que não é versionado. O `.env.example` lista as variáveis: `ANTHROPIC_API_KEY`, `PULSE_MODELO`, `PULSE_MODELO_VERIFICADOR`, `PULSE_BANCO`, `PULSE_MODELO_SIMULADO`.
+- **Segredos:** só em `.env`, que não é versionado. O `.env.example` lista as variáveis: `GROQ_API_KEY`, `PULSE_MODELO`, `PULSE_MODELO_VERIFICADOR`, `PULSE_BANCO`, `PULSE_MODELO_SIMULADO`.
 - **Dados:** apenas sintéticos. Nenhum dado real de paciente entra no repositório.
 - **Nomes:** os termos do código seguem os do fluxo (relato, barreira, proposta, aceite, rodada).
 - **Testes:** toda regra de segurança (urgência, aceite, filtro, chave única) tem teste antes de ser ligada ao fluxo.

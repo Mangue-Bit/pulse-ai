@@ -13,24 +13,23 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Protocol
 
-import anthropic
+import groq
 from pydantic import BaseModel, ValidationError
 
 from app.config import configuracao
 from app.rastro import MetricasChamada
 
 PASTA_PROMPTS = Path(__file__).parent / "prompts"
-BETA_FALLBACK = "server-side-fallback-2026-07-01"
 MAXIMO_DE_TOKENS = 8000
 MODELO_SIMULADO = "simulado-local"
 
-# Preço em dólares por milhão de tokens (entrada, saída).
+# Preço em dólares por milhão de tokens (entrada, saída), da tabela pública da Groq.
+# Modelo fora da tabela fica com custo desconhecido (None) no evento.
 PRECOS: dict[str, tuple[float, float]] = {
-    "claude-opus-5-5": (4.0, 20.0),
-    "claude-sonnet-5-5": (2.0, 10.0),
-    "claude-opus-5": (5.0, 25.0),
-    "claude-sonnet-5": (2.0, 10.0),
-    "claude-opus-4-8": (5.0, 25.0),
+    "openai/gpt-oss-120b": (0.15, 0.60),
+    "openai/gpt-oss-20b": (0.075, 0.30),
+    "openai/gpt-oss-safeguard-20b": (0.075, 0.30),
+    "qwen/qwen3.8-27b": (0.80, 4.00),
     MODELO_SIMULADO: (0.0, 0.0),
 }
 
@@ -135,59 +134,110 @@ class Cliente(Protocol):
 
 # --- Cliente real -------------------------------------------------------------
 
-@dataclass
-class ClienteAnthropic:
-    """Chama a API da Anthropic com o fallback do servidor ligado."""
+_SO_NO_PYDANTIC = {
+    "minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum", "minLength", "maxLength",
+    "pattern", "format", "default", "minItems", "maxItems",
+}
 
-    api: anthropic.Anthropic = field(
-        default_factory=lambda: anthropic.Anthropic(timeout=60.0, max_retries=2)
-    )
+
+def esquema_estrito(esquema: type[BaseModel]) -> dict:
+    """Esquema JSON do modelo Pydantic no formato do modo estrito da Groq.
+
+    Todo objeto recusa propriedades extras e exige todas as que declara; campo
+    opcional é união com nulo. Limites numéricos e de tamanho saem do esquema
+    enviado e continuam valendo na validação feita aqui, pelo Pydantic.
+    """
+
+    def ajustar(no):
+        if isinstance(no, list):
+            return [ajustar(item) for item in no]
+        if not isinstance(no, dict):
+            return no
+        limpo = {k: ajustar(v) for k, v in no.items() if k not in _SO_NO_PYDANTIC}
+        if limpo.get("type") == "object" and "properties" in limpo:
+            limpo["additionalProperties"] = False
+            limpo["required"] = list(limpo["properties"])
+        return limpo
+
+    bruto = esquema.model_json_schema()
+    estrito = ajustar(bruto)
+    if "$defs" in bruto:
+        estrito["$defs"] = {nome: ajustar(definicao) for nome, definicao in bruto["$defs"].items()}
+    return estrito
+
+
+def _com_raciocinio(modelo: str, esforco: str) -> dict:
+    """Parâmetros de raciocínio, aceitos pelos modelos GPT-OSS da Groq."""
+    if modelo.startswith("openai/gpt-oss"):
+        return {"reasoning_effort": esforco, "include_reasoning": False}
+    return {}
+
+
+_MOTIVOS = {
+    "stop": "end_turn", "length": "max_tokens", "tool_calls": "tool_use",
+    "content_filter": "refusal",
+}
+
+
+@dataclass
+class ClienteGroq:
+    """Chama a API da Groq pelo SDK oficial."""
+
+    api: groq.Groq = field(default_factory=lambda: groq.Groq(timeout=60.0, max_retries=2))
+
+    def _bruta(self, resposta) -> tuple[RespostaBruta, object]:
+        escolha = resposta.choices[0]
+        uso = resposta.usage
+        bruta = RespostaBruta(
+            motivo_parada=_MOTIVOS.get(escolha.finish_reason or "", escolha.finish_reason or ""),
+            modelo=resposta.model,
+            tokens_entrada=uso.prompt_tokens if uso else 0,
+            tokens_saida=uso.completion_tokens if uso else 0,
+        )
+        return bruta, escolha.message
 
     def estruturado(self, *, ponto, modelo, sistema, mensagem, esquema, esforco) -> RespostaBruta:
-        resposta = self.api.beta.messages.parse(
+        resposta = self.api.chat.completions.create(
             model=modelo,
-            max_tokens=MAXIMO_DE_TOKENS,
-            system=sistema,
-            messages=[{"role": "user", "content": mensagem}],
-            output_format=esquema,
-            output_config={"effort": esforco},
-            betas=[BETA_FALLBACK],
-            fallbacks="default",
+            max_completion_tokens=MAXIMO_DE_TOKENS,
+            messages=[
+                {"role": "system", "content": sistema},
+                {"role": "user", "content": mensagem},
+            ],
+            response_format={
+                "type": "json_schema",
+                "json_schema": {"name": ponto, "strict": True, "schema": esquema_estrito(esquema)},
+            },
+            **_com_raciocinio(modelo, esforco),
         )
-        bruta = RespostaBruta(
-            motivo_parada=resposta.stop_reason or "",
-            modelo=resposta.model,
-            tokens_entrada=resposta.usage.input_tokens,
-            tokens_saida=resposta.usage.output_tokens,
-        )
+        bruta, mensagem_do_modelo = self._bruta(resposta)
         if bruta.motivo_parada == "end_turn":
-            bruta.saida = resposta.parsed_output
+            bruta.saida = esquema.model_validate_json(mensagem_do_modelo.content or "")
         return bruta
 
     def com_ferramentas(self, *, ponto, modelo, sistema, mensagem, ferramentas, esforco) -> RespostaBruta:
-        resposta = self.api.beta.messages.create(
+        resposta = self.api.chat.completions.create(
             model=modelo,
-            max_tokens=MAXIMO_DE_TOKENS,
-            system=sistema,
-            messages=[{"role": "user", "content": mensagem}],
-            tools=[{**f, "strict": True} for f in ferramentas],
-            tool_choice={"type": "auto", "disable_parallel_tool_use": True},
-            output_config={"effort": esforco},
-            betas=[BETA_FALLBACK],
-            fallbacks="default",
+            max_completion_tokens=MAXIMO_DE_TOKENS,
+            messages=[
+                {"role": "system", "content": sistema},
+                {"role": "user", "content": mensagem},
+            ],
+            tools=[
+                {"type": "function", "function": {
+                    "name": f["name"], "description": f["description"], "parameters": f["input_schema"],
+                }}
+                for f in ferramentas
+            ],
+            tool_choice="auto",
+            **_com_raciocinio(modelo, esforco),
         )
-        bruta = RespostaBruta(
-            motivo_parada=resposta.stop_reason or "",
-            modelo=resposta.model,
-            tokens_entrada=resposta.usage.input_tokens,
-            tokens_saida=resposta.usage.output_tokens,
-        )
-        if bruta.motivo_parada != "refusal":
-            for bloco in resposta.content:
-                if bloco.type == "tool_use":
-                    bruta.ferramenta = bloco.name
-                    bruta.argumentos = dict(bloco.input)
-                    break
+        bruta, mensagem_do_modelo = self._bruta(resposta)
+        chamadas = mensagem_do_modelo.tool_calls or []
+        if chamadas:
+            # Só a primeira chamada é considerada, e ela não é executada: vira proposta.
+            bruta.ferramenta = chamadas[0].function.name
+            bruta.argumentos = json.loads(chamadas[0].function.arguments or "{}")
         return bruta
 
 
@@ -204,7 +254,7 @@ def cliente() -> Cliente:
 
             _cliente = ClienteSimulado()
         else:
-            _cliente = ClienteAnthropic()
+            _cliente = ClienteGroq()
     return _cliente
 
 
@@ -222,9 +272,11 @@ def em_modo_simulado() -> bool:
 
 # --- Chamadas -----------------------------------------------------------------
 
-def _custo(modelo: str, tokens_entrada: int, tokens_saida: int) -> float:
-    entrada, saida = PRECOS.get(modelo, PRECOS["claude-opus-5-5"])
-    return round((tokens_entrada * entrada + tokens_saida * saida) / 1_000_000, 6)
+def _custo(modelo: str, tokens_entrada: int, tokens_saida: int) -> float | None:
+    if modelo not in PRECOS:
+        return None
+    entrada, saida = PRECOS[modelo]
+    return round((tokens_entrada * entrada + tokens_saida * saida) / 1_000_000, 8)
 
 
 def _executar(prompt: Prompt, modelo: str, chamar) -> Resultado:
@@ -236,9 +288,14 @@ def _executar(prompt: Prompt, modelo: str, chamar) -> Resultado:
         bruta = chamar()
     except ValidationError as erro:
         falha, detalhe = "saida_invalida", f"{erro.error_count()} campo(s) fora do esquema"
-    except anthropic.APIConnectionError as erro:
+    except json.JSONDecodeError:
+        falha, detalhe = "saida_invalida", "argumentos da ferramenta fora do formato JSON"
+    except groq.APIConnectionError as erro:
         falha, detalhe = "erro", f"rede: {type(erro).__name__}"
-    except anthropic.APIStatusError as erro:
+    except groq.BadRequestError:
+        # A Groq devolve 400 quando o modelo gera saída ou chamada de ferramenta fora do esquema.
+        falha, detalhe = "saida_invalida", "api: 400"
+    except groq.APIStatusError as erro:
         falha, detalhe = "erro", f"api: {erro.status_code}"
     except Exception as erro:  # qualquer outra falha também segue para o caminho humano
         falha, detalhe = "erro", type(erro).__name__

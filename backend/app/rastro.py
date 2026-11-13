@@ -26,7 +26,7 @@ class MetricasChamada:
     latencia_ms: int
     tokens_entrada: int
     tokens_saida: int
-    custo: float
+    custo: float | None
 
 
 def _json(valor: Any) -> Any:

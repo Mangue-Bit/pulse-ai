@@ -18,13 +18,13 @@ def test_registrar_evento_grava_e_devolve_em_ordem(sessao):
 
 def test_evento_guarda_metricas_da_chamada_ao_modelo(sessao):
     chamada = rastro.MetricasChamada(
-        modelo="claude-opus-5-5", versao_prompt="interpretar_relato.v1",
+        modelo="openai/gpt-oss-120b", versao_prompt="interpretar_relato.v1",
         latencia_ms=812, tokens_entrada=420, tokens_saida=96, custo=0.0036,
     )
     evento = rastro.registrar_evento(
         sessao, etapa="E10", ator="modelo", paciente_id="pac-1", chamada=chamada,
     )
-    assert evento.modelo == "claude-opus-5-5"
+    assert evento.modelo == "openai/gpt-oss-120b"
     assert evento.versao_prompt == "interpretar_relato.v1"
     assert (evento.latencia_ms, evento.tokens_entrada, evento.tokens_saida) == (812, 420, 96)
     assert evento.custo == pytest.approx(0.0036)
