@@ -63,7 +63,7 @@ class ClienteQueFalha:
         self.chamadas += 1
         if self.erro:
             raise self.erro
-        return RespostaBruta(motivo_parada=self.motivo_parada, modelo="claude-opus-5-5")
+        return RespostaBruta(motivo_parada=self.motivo_parada, modelo="openai/gpt-oss-120b")
 
     com_ferramentas = estruturado
 

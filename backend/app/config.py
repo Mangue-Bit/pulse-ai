@@ -25,13 +25,11 @@ def configuracao() -> Configuracao:
     banco = Path(os.environ.get("PULSE_BANCO") or "backend/dados/pulse.db")
     if not banco.is_absolute():
         banco = RAIZ / banco
-    tem_credencial = bool(
-        os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_AUTH_TOKEN")
-    )
+    tem_credencial = bool(os.environ.get("GROQ_API_KEY", "").strip())
     forcado = os.environ.get("PULSE_MODELO_SIMULADO", "").strip() in {"1", "true", "sim"}
     return Configuracao(
-        modelo=os.environ.get("PULSE_MODELO") or "claude-opus-5-5",
-        modelo_verificador=os.environ.get("PULSE_MODELO_VERIFICADOR") or "claude-sonnet-5-5",
+        modelo=os.environ.get("PULSE_MODELO") or "openai/gpt-oss-120b",
+        modelo_verificador=os.environ.get("PULSE_MODELO_VERIFICADOR") or "openai/gpt-oss-120b",
         banco=banco,
         modelo_simulado=forcado or not tem_credencial,
     )
