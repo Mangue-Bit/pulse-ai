@@ -66,8 +66,9 @@ def porta_livre(preferida: int) -> int:
 
 def main() -> int:
     npm = shutil.which("npm")
-    if npm is None:
-        print("[pulse] npm não encontrado. Instale o Node.js 20 ou superior.")
+    node = shutil.which("node")
+    if npm is None or node is None:
+        print("[pulse] Node.js não encontrado. Instale o Node.js 20 ou superior.")
         return 1
     preparar_python()
     preparar_frontend(npm)
@@ -84,8 +85,11 @@ def main() -> int:
             cwd=BACKEND,
             env=ambiente,
         ),
+        # O Vite é chamado direto pelo Node: encerrar um processo do npm no Windows
+        # deixaria o servidor da interface rodando.
         subprocess.Popen(
-            [npm, "run", "dev", "--", "--port", str(porta_tela), "--strictPort"],
+            [node, str(FRONTEND / "node_modules" / "vite" / "bin" / "vite.js"),
+             "--port", str(porta_tela), "--strictPort"],
             cwd=FRONTEND,
             env=ambiente,
         ),
