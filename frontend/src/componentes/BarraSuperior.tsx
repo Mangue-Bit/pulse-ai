@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 
-import { Clock, MessageCircle, RotateCcw, Route, Stethoscope, WifiOff, type LucideIcon } from 'lucide-react'
+import { Clock, RotateCcw, WifiOff } from 'lucide-react'
 
 import { api, type Disparo } from '@/api'
 import {
@@ -14,74 +14,14 @@ import {
   AlertDialogTitle,
 } from '@/componentes/ui/alert-dialog'
 import { Button } from '@/componentes/ui/button'
-import { useEstado, type Tela } from '@/estado'
+import { useEstado } from '@/estado'
 import { diaDaSemana, hora } from '@/lib/formato'
-import { cn } from '@/lib/utils'
 
 const AVANCOS = [
   { minutos: 15, nome: '+15 min' },
   { minutos: 60, nome: '+1 hora' },
   { minutos: 60 * 24, nome: '+1 dia' },
 ]
-
-function Marca() {
-  return (
-    <div className="flex items-center gap-2">
-      <svg viewBox="0 0 34 24" className="h-6 w-8" aria-hidden>
-        <path
-          d="M1 13h7l3-9 5 17 4-12 2 4h11"
-          fill="none"
-          stroke="var(--urgencia)"
-          strokeWidth="2.6"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-      <span className="font-serif text-[1.5rem] leading-none font-semibold tracking-tight">Pulse</span>
-    </div>
-  )
-}
-
-function ItemDeNavegacao({
-  tela,
-  nome,
-  icone: Icone,
-  contador,
-  urgente,
-}: {
-  tela: Tela
-  nome: string
-  icone: LucideIcon
-  contador?: number
-  urgente?: boolean
-}) {
-  const { tela: atual, irPara } = useEstado()
-  const ativa = atual === tela
-  return (
-    <button
-      type="button"
-      onClick={() => irPara(tela)}
-      aria-current={ativa ? 'page' : undefined}
-      className={cn(
-        'relative flex h-9 items-center gap-2 rounded-full px-4 text-[0.95rem] font-semibold transition-colors',
-        ativa ? 'bg-primary text-primary-foreground' : 'text-foreground/70 hover:bg-muted hover:text-foreground',
-      )}
-    >
-      <Icone className="size-4" aria-hidden />
-      {nome}
-      {contador !== undefined && contador > 0 && (
-        <span
-          className={cn(
-            'min-w-5 rounded-full px-1.5 text-center text-xs leading-5 font-bold text-white',
-            urgente ? 'bg-urgencia' : 'bg-equipe',
-          )}
-        >
-          {contador}
-        </span>
-      )}
-    </button>
-  )
-}
 
 /** Painel que abre abaixo de um botão e fecha com clique fora ou Esc. */
 function Suspenso({ aberto, aoFechar, children }: { aberto: boolean; aoFechar: () => void; children: ReactNode }) {
@@ -101,14 +41,14 @@ function Suspenso({ aberto, aoFechar, children }: { aberto: boolean; aoFechar: (
   }, [aberto, aoFechar])
   if (!aberto) return null
   return (
-    <div ref={ref} className="absolute top-[calc(100%+8px)] right-0 z-30 w-72 rounded-2xl border bg-popover p-4 shadow-xl">
+    <div ref={ref} className="absolute top-[calc(100%+8px)] right-0 z-30 w-72 rounded-md border bg-popover p-4 shadow-md">
       {children}
     </div>
   )
 }
 
 export function BarraSuperior() {
-  const { conectado, relogio, agora, alertas, duvidas, propostas, recarregarTudo, mostrarRastro } = useEstado()
+  const { conectado, relogio, agora, recarregarTudo, mostrarRastro } = useEstado()
   const [menu, setMenu] = useState(false)
   const [avancando, setAvancando] = useState(false)
   const [disparos, setDisparos] = useState<Disparo[] | null>(null)
@@ -146,29 +86,13 @@ export function BarraSuperior() {
     }
   }
 
-  const alertasAbertos = (alertas.dados ?? []).filter((a) => a.status === 'aberto' || a.status === 'pendencia_critica').length
-  const duvidasAbertas = (duvidas.dados ?? []).filter((d) => d.status !== 'respondida').length
-  const pendentes = (propostas.dados ?? []).filter((p) => p.estado === 'pendente').length
-
   return (
-    <header className="relative z-20 grid h-16 shrink-0 grid-cols-[1fr_auto_1fr] items-center border-b bg-card px-5">
-      <Marca />
+    <header className="topo">
+      <p className="topo-local">Demonstração com pacientes fictícios</p>
 
-      <nav className="flex items-center gap-1 rounded-full bg-background p-1" aria-label="Telas do Pulse">
-        <ItemDeNavegacao tela="paciente" nome="Paciente" icone={MessageCircle} />
-        <ItemDeNavegacao
-          tela="equipe"
-          nome="Equipe"
-          icone={Stethoscope}
-          contador={alertasAbertos + duvidasAbertas + pendentes}
-          urgente={alertasAbertos > 0}
-        />
-        <ItemDeNavegacao tela="rastro" nome="Rastro" icone={Route} />
-      </nav>
-
-      <div className="flex items-center justify-end gap-2">
+      <div className="ml-auto flex items-center gap-2">
         {!conectado && (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-urgencia-suave px-3 py-1 text-sm font-semibold text-urgencia">
+          <span className="topo-conexao inline-flex items-center gap-1.5 rounded-md bg-urgencia-suave px-2.5 py-1 text-sm font-semibold text-urgencia">
             <WifiOff className="size-4" aria-hidden />
             Sem conexão
           </span>
@@ -179,11 +103,11 @@ export function BarraSuperior() {
             onClick={() => setMenu((m) => !m)}
             aria-expanded={menu}
             aria-label="Relógio e controles da demonstração"
-            className="flex h-9 items-center gap-2 rounded-full border px-3 text-sm font-semibold hover:bg-muted aria-expanded:bg-muted"
+            className="flex h-8 items-center gap-2 rounded-md border bg-card px-2.5 text-sm font-medium hover:bg-muted aria-expanded:bg-muted"
           >
             <Clock className="size-4 text-muted-foreground" aria-hidden />
             <span className="tabular-nums">{hora(agora)}</span>
-            <span className="font-normal text-muted-foreground">{diaDaSemana(agora)}</span>
+            <span className="hidden font-normal text-muted-foreground xl:inline">{diaDaSemana(agora)}</span>
           </button>
           <Suspenso aberto={menu} aoFechar={() => setMenu(false)}>
             <p className="font-semibold">Avançar o relógio</p>
@@ -221,7 +145,7 @@ export function BarraSuperior() {
       {disparos && (
         <div
           role="status"
-          className="absolute top-[calc(100%+8px)] right-5 z-20 max-w-sm rounded-xl border bg-popover px-4 py-3 text-sm shadow-lg"
+          className="absolute top-[calc(100%+8px)] right-5 z-20 max-w-sm rounded-md border bg-popover px-4 py-3 text-sm shadow-md"
         >
           {disparos.length === 0 ? (
             <p className="text-muted-foreground">Relógio avançado. Nenhum prazo venceu.</p>

@@ -7,37 +7,37 @@
 
 :root {
   /* Superfícies e tinta */
-  --background: #eef1f5;
-  --foreground: #18212f;
+  --background: #f2f5f8;
+  --foreground: #162538;
   --card: #ffffff;
-  --card-foreground: #18212f;
+  --card-foreground: #162538;
   --popover: #ffffff;
-  --popover-foreground: #18212f;
-  --primary: #1d2b4a;
+  --popover-foreground: #162538;
+  --primary: #183e82;
   --primary-foreground: #ffffff;
   --secondary: #e6eaf0;
-  --secondary-foreground: #18212f;
-  --muted: #e9edf2;
-  --muted-foreground: #586377;
+  --secondary-foreground: #162538;
+  --muted: #e9eff6;
+  --muted-foreground: #546579;
   --accent: #e6eaf0;
-  --accent-foreground: #18212f;
+  --accent-foreground: #162538;
   --destructive: #c9302f;
-  --border: #d5dbe4;
-  --input: #c6cdd8;
-  --ring: #5b7bd6;
-  --radius: 0.625rem;
+  --border: #dce3ec;
+  --input: #cbd6e2;
+  --ring: #3260ac;
+  --radius: 0.375rem;
 
   /* Cores do fluxograma */
-  --escuta: #2463c8;
-  --escuta-suave: #e4edfb;
-  --urgencia: #c9302f;
-  --urgencia-suave: #fde8e6;
-  --cuidado: #7448c9;
-  --cuidado-suave: #efe8fb;
-  --equipe: #c96a0a;
-  --equipe-suave: #fdefd9;
-  --concluido: #23874f;
-  --concluido-suave: #def3e6;
+  --escuta: #1b4f96;
+  --escuta-suave: #e9f0fb;
+  --urgencia: #a22a32;
+  --urgencia-suave: #fcebec;
+  --cuidado: #355580;
+  --cuidado-suave: #eef3fa;
+  --equipe: #80500c;
+  --equipe-suave: #f8efdf;
+  --concluido: #25664f;
+  --concluido-suave: #e3f1eb;
   --lateral: #6c7686;
   --lateral-suave: #e8ebef;
 }

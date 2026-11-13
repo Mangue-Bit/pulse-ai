@@ -98,11 +98,17 @@ function situacaoCurta(p: Paciente): string {
 
 function ListaDePacientes() {
   const { pacientes, paciente, escolherPaciente } = useEstado()
+  const [termo, setTermo] = useState('')
+  const normalizar = (valor: string) => valor.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLocaleLowerCase('pt-BR')
+  const lista = (pacientes.dados ?? []).filter((p) => normalizar(p.nome).includes(normalizar(termo.trim())))
   return (
     <aside className="hidden min-h-0 flex-col border-r bg-card lg:flex" aria-label="Pacientes">
       <h2 className="px-5 pt-5 pb-3 font-serif text-lg font-semibold">Pacientes</h2>
+      <input type="search" aria-label="Buscar paciente" placeholder="Buscar paciente" value={termo}
+        onChange={(e) => setTermo(e.target.value)} className="busca-paciente" />
       <ul className="rolagem flex min-h-0 flex-1 flex-col gap-0.5 px-2 pb-3">
-        {(pacientes.dados ?? []).map((p) => {
+        {lista.length === 0 && termo && <li className="px-3 py-2 text-sm text-muted-foreground">Nenhum paciente encontrado.</li>}
+        {lista.map((p) => {
           const ativo = p.id === paciente?.id
           return (
             <li key={p.id}>
@@ -136,7 +142,7 @@ function PainelDeCenarios({ aoEscolher, ocupado }: { aoEscolher: (texto: string)
       <div>
         <h2 className="font-serif text-lg font-semibold">Experimente</h2>
         <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-          Envie uma mensagem como se fosse o paciente e veja como o Pulse reage.
+          Escolha um cenário para preencher a mensagem.
         </p>
       </div>
       <ul className="flex flex-col gap-2">
@@ -157,7 +163,6 @@ function PainelDeCenarios({ aoEscolher, ocupado }: { aoEscolher: (texto: string)
                   <span className="font-semibold">{cenario.titulo}</span>
                 </span>
                 <span className="font-serif text-[0.95rem] leading-snug italic">“{cenario.texto}”</span>
-                <span className="text-sm leading-snug text-muted-foreground">{cenario.resultado}</span>
               </button>
             </li>
           )
@@ -269,6 +274,7 @@ export function AreaPaciente() {
   const [erro, setErro] = useState<string | null>(null)
   const [aviso, setAviso] = useState<string | null>(null)
   const fim = useRef<HTMLDivElement>(null)
+  const campo = useRef<HTMLTextAreaElement>(null)
   const jaVistas = useRef<Set<string> | null>(null)
 
   const enviar = async (conteudo: string, canal: Canal) => {
@@ -336,8 +342,13 @@ export function AreaPaciente() {
     void enviar(texto, 'texto')
   }
 
+  const preencher = (conteudo: string) => {
+    setTexto(conteudo)
+    campo.current?.focus()
+  }
+
   return (
-    <div className="grid h-full grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)_320px]">
+    <div className="tela-paciente grid h-full">
       <ListaDePacientes />
 
       <section className="flex min-h-0 flex-col bg-background" aria-label="Conversa">
@@ -422,12 +433,12 @@ export function AreaPaciente() {
                 {erro ?? aviso}
               </p>
             )}
-            <div className="flex gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none] xl:hidden">
+            <div className="atalhos-cenarios flex gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none] xl:hidden">
               {CENARIOS.map((cenario) => (
                 <button
                   key={cenario.titulo}
                   type="button"
-                  onClick={() => setTexto(cenario.texto)}
+                  onClick={() => preencher(cenario.texto)}
                   className="shrink-0 rounded-full border bg-background px-3 py-1 text-sm font-medium text-foreground/80 hover:border-escuta hover:text-escuta"
                 >
                   {cenario.titulo}
@@ -436,6 +447,7 @@ export function AreaPaciente() {
             </div>
             <form onSubmit={aoEnviar} className="flex items-end gap-2">
               <textarea
+                ref={campo}
                 value={voz.ouvindo ? voz.parcial : texto}
                 onChange={(e) => setTexto(e.target.value)}
                 onKeyDown={(e) => {
@@ -476,7 +488,7 @@ export function AreaPaciente() {
         </footer>
       </section>
 
-      <PainelDeCenarios aoEscolher={(t) => void enviar(t, 'texto')} ocupado={enviando || !paciente} />
+      <PainelDeCenarios aoEscolher={preencher} ocupado={enviando || !paciente} />
     </div>
   )
 }

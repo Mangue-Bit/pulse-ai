@@ -176,14 +176,14 @@ function Fronteira({ texto }: { texto: string }) {
   )
 }
 
-export function LinhaDoTempo({ eventos, vazio }: { eventos: Evento[]; vazio: string }) {
+export function LinhaDoTempo({ eventos, vazio, aoFim = true }: { eventos: Evento[]; vazio: string; aoFim?: boolean }) {
   const grupos = useMemo(() => agrupar(eventos), [eventos])
   const fim = useRef<HTMLDivElement>(null)
   const quantidade = eventos.length
 
   useEffect(() => {
-    fim.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
-  }, [quantidade])
+    if (aoFim) fim.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
+  }, [quantidade, aoFim])
 
   if (quantidade === 0) {
     return (

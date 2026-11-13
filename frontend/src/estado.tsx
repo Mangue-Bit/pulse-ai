@@ -15,6 +15,7 @@ import {
 import { useConsulta, type Consulta } from '@/lib/consulta'
 
 export type AbaEquipe =
+  | 'visao-geral'
   | 'alertas'
   | 'duvidas'
   | 'aprovacoes'
@@ -26,12 +27,12 @@ export type AbaEquipe =
 
 export type Tela = 'paciente' | 'equipe' | 'rastro'
 
-const ABAS: AbaEquipe[] = ['alertas', 'duvidas', 'aprovacoes', 'casos', 'acs', 'territorio', 'relatorios', 'gestor']
+const ABAS: AbaEquipe[] = ['visao-geral', 'alertas', 'duvidas', 'aprovacoes', 'casos', 'acs', 'territorio', 'relatorios', 'gestor']
 
 /** Lê a tela e a aba da equipe do endereço (#/equipe/aprovacoes), para o link e o recarregamento manterem o lugar. */
 function lerEndereco(): { tela: Tela; aba: AbaEquipe | null } {
   const [tela, aba] = window.location.hash.replace(/^#\/?/, '').split('/')
-  const valida = tela === 'equipe' || tela === 'rastro' ? tela : 'paciente'
+  const valida = tela === 'paciente' || tela === 'rastro' ? tela : 'equipe'
   return { tela: valida, aba: ABAS.includes(aba as AbaEquipe) ? (aba as AbaEquipe) : null }
 }
 
@@ -64,7 +65,8 @@ interface Estado {
   tela: Tela
   irPara: (tela: Tela) => void
   aba: AbaEquipe
-  abrirAba: (aba: AbaEquipe) => void
+  abrirAba: (aba: AbaEquipe, propostaId?: string) => void
+  propostaEmFoco: string | null
   rastro: OrigemDoRastro
   mostrarRastro: (origem: OrigemDoRastro) => void
   recarregarTudo: () => void
@@ -86,7 +88,8 @@ export function ProvedorDeEstado({ children }: { children: ReactNode }) {
   const [pacienteId, setPacienteId] = useState<string | null>(null)
   const [atuandoId, setAtuandoId] = useState<string | null>(null)
   const [tela, setTela] = useState<Tela>(() => lerEndereco().tela)
-  const [aba, setAba] = useState<AbaEquipe>(() => lerEndereco().aba ?? 'aprovacoes')
+  const [aba, setAba] = useState<AbaEquipe>(() => lerEndereco().aba ?? 'visao-geral')
+  const [propostaEmFoco, setPropostaEmFoco] = useState<string | null>(null)
   const [rastro, setRastro] = useState<OrigemDoRastro>({ tipo: 'paciente' })
 
   useEffect(() => escreverEndereco(tela, aba), [tela, aba])
@@ -95,14 +98,16 @@ export function ProvedorDeEstado({ children }: { children: ReactNode }) {
       const lido = lerEndereco()
       setTela(lido.tela)
       if (lido.aba) setAba(lido.aba)
+      setPropostaEmFoco(null)
     }
     window.addEventListener('hashchange', aoMudar)
     return () => window.removeEventListener('hashchange', aoMudar)
   }, [])
 
-  const abrirAba = useCallback((nova: AbaEquipe) => {
+  const abrirAba = useCallback((nova: AbaEquipe, propostaId?: string) => {
     setAba(nova)
     setTela('equipe')
+    setPropostaEmFoco(propostaId ?? null)
   }, [])
 
   // Abrir o rastro de um caso leva à tela do rastro; voltar ao vivo não muda de tela.
@@ -161,6 +166,7 @@ export function ProvedorDeEstado({ children }: { children: ReactNode }) {
     irPara: setTela,
     aba,
     abrirAba,
+    propostaEmFoco,
     rastro,
     mostrarRastro,
     recarregarTudo,

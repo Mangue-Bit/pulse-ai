@@ -74,7 +74,7 @@ export function AreaRastro() {
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="tela-rastro flex h-full flex-col">
       <header className="flex flex-wrap items-end gap-x-6 gap-y-3 border-b bg-card px-8 pt-6 pb-4">
         <div className="min-w-0 flex-1">
           <h1 className="font-serif text-[1.75rem] leading-tight font-semibold">Como o Pulse decidiu</h1>
@@ -198,6 +198,7 @@ export function AreaRastro() {
               <div className="mx-auto max-w-3xl px-6 py-4">
                 <LinhaDoTempo
                   eventos={rastro.visiveis}
+                  aoFim={aoVivo || rastro.reproduzindo}
                   vazio={
                     aoVivo
                       ? 'Envie uma mensagem na tela do Paciente. Cada passo aparece aqui enquanto acontece.'

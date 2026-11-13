@@ -324,9 +324,12 @@ function LinhaDecidida({ proposta }: { proposta: Proposta }) {
 }
 
 export function AbaAprovacoes() {
-  const { propostas } = useEstado()
+  const { propostas, propostaEmFoco } = useEstado()
+  const [selecionada, setSelecionada] = useState<{ foco: string | null; id: string } | null>(null)
   const todas = propostas.dados ?? []
   const pendentes = todas.filter((p) => p.estado === 'pendente')
+  const idEmRevisao = selecionada && selecionada.foco === propostaEmFoco ? selecionada.id : propostaEmFoco
+  const emRevisao = pendentes.find((p) => p.id === idEmRevisao) ?? pendentes[0]
   const decididas = todas
     .filter((p) => p.estado !== 'pendente')
     .sort((a, b) => (b.decidida_em ?? b.criado_em).localeCompare(a.decidida_em ?? a.criado_em))
@@ -338,7 +341,23 @@ export function AbaAprovacoes() {
           Quando um paciente contar uma dificuldade, a sugestão do Pulse aparece aqui.
         </Vazio>
       ) : (
-        pendentes.map((proposta) => <CartaoPendente key={proposta.id} proposta={proposta} />)
+        <div className="revisao">
+          <aside aria-label="Propostas pendentes">
+            <h2>Para revisar <span>{pendentes.length}</span></h2>
+            <ul>
+              {pendentes.map((proposta) => (
+                <li key={proposta.id}>
+                  <button type="button" aria-current={proposta.id === emRevisao?.id ? 'true' : undefined}
+                    onClick={() => setSelecionada({ foco: propostaEmFoco, id: proposta.id })}>
+                    <strong>{proposta.paciente_nome}</strong>
+                    <span>{rotulo(BARREIRA, proposta.barreira)}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </aside>
+          {emRevisao && <CartaoPendente key={emRevisao.id} proposta={emRevisao} />}
+        </div>
       )}
 
       {decididas.length > 0 && (
