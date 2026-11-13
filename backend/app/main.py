@@ -1,13 +1,16 @@
 """Aplicação FastAPI e rotas do Pulse."""
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from sqlmodel import Session, select
 
-from app import banco, contratos, equipe, modelo, rastro, relogio
+from app import banco, contratos, equipe, fronteira, modelo, rastro, relogio
 from app.banco import sessao_da_rota
 from app.config import configuracao
+from app.escuta import conversa
+from app.regras import aceite as regra_do_aceite
 from app.regras.aceite import aceite_valido
+from app.regras.limites import TAMANHO_MAXIMO_DA_MENSAGEM
 
 app = FastAPI(title="Pulse", version="0.1.0")
 
@@ -60,6 +63,54 @@ def reiniciar_demonstracao(s: Session = Depends(sessao_da_rota)) -> dict:
 
     carga.carregar(s)
     return {"status": "ok"}
+
+
+# --- Paciente: conversa e aceite (Escuta) --------------------------------------
+
+class MensagemDoPaciente(BaseModel):
+    paciente_id: str
+    texto: str = Field(max_length=TAMANHO_MAXIMO_DA_MENSAGEM)
+    canal: contratos.Canal = "texto"
+
+
+class PedidoDeAceite(BaseModel):
+    paciente_id: str
+
+
+@app.post("/api/mensagens")
+def receber_mensagem(
+    mensagem: MensagemDoPaciente, tarefas: BackgroundTasks, s: Session = Depends(sessao_da_rota),
+) -> dict:
+    _paciente_ou_404(s, mensagem.paciente_id)
+    resultado = fronteira.receber_mensagem_do_paciente(
+        s, mensagem.paciente_id, mensagem.texto, mensagem.canal, tarefas.add_task,
+    )
+    return {
+        "interacao_id": resultado.contexto.interacao_id,
+        "desfecho": resultado.desfecho,
+        "mensagens": [conversa.para_visao(m) for m in resultado.mensagens],
+    }
+
+
+@app.get("/api/conversas/{paciente_id}")
+def ler_conversa(paciente_id: str, s: Session = Depends(sessao_da_rota)) -> dict:
+    _paciente_ou_404(s, paciente_id)
+    return {
+        "paciente_id": paciente_id,
+        "aceite_valido": aceite_valido(s, paciente_id),
+        "mensagens": [conversa.para_visao(m) for m in conversa.listar(s, paciente_id)],
+    }
+
+
+@app.post("/api/aceite")
+def registrar_aceite(pedido: PedidoDeAceite, s: Session = Depends(sessao_da_rota)) -> dict:
+    _paciente_ou_404(s, pedido.paciente_id)
+    regra_do_aceite.registrar_aceite(s, pedido.paciente_id)
+    rastro.registrar_evento(
+        s, etapa="E04", ator="pessoa", paciente_id=pedido.paciente_id,
+        saida={"aceite": "registrado", "resumo": "O paciente registrou o aceite."},
+    )
+    return {"paciente_id": pedido.paciente_id, "aceite_valido": True, "propostas_canceladas": 0}
 
 
 # --- Relógio do sistema -------------------------------------------------------
