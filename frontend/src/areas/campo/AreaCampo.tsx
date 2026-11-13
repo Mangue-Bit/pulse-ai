@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 
-import { ChevronRight, CloudCheck, CloudOff, Hand, LogOut, RefreshCw, TriangleAlert, UserRound } from 'lucide-react'
+import { ChevronRight, CloudCheck, CloudOff, Hand, ListChecks, LogOut, RefreshCw, ShieldAlert, TriangleAlert, UserRound } from 'lucide-react'
 
 import { api, type Profissional } from '@/api'
 import { useAcsDaAba } from '@/areas/equipe/AbaAcs'
@@ -12,6 +12,7 @@ import { dia, diaDaSemana, hora } from '@/lib/formato'
 import { cn } from '@/lib/utils'
 
 import { FichaDaVisita } from './FichaDaVisita'
+import { PainelDeRisco } from './PainelDeRisco'
 import { useFilaDeEnvio, type FilaDeEnvio } from './useFilaDeEnvio'
 import { useUltimo } from './useUltimo'
 import { montarVisitas, type Visita } from './visitas'
@@ -142,6 +143,7 @@ function Tablet({ acs, agentes, escolher }: { acs: Profissional; agentes: Profis
   const territorio = useUltimo(consulta.dados, microarea, agora)
   const carteira = useUltimo(pacientes.dados, 'pacientes', agora)
   const [aberta, setAberta] = useState<string | null>(null)
+  const [aba, setAba] = useState<'visitas' | 'risco'>('visitas')
 
   const recarregarTerritorio = consulta.recarregar
   const recarregarPacientes = pacientes.recarregar
@@ -194,6 +196,20 @@ function Tablet({ acs, agentes, escolher }: { acs: Profissional; agentes: Profis
       <div className="campo-paineis">
         <section className="campo-lista rolagem" aria-label="Visitas">
           <div className="flex flex-col gap-3 p-4">
+            <div className="campo-abas" role="group" aria-label="O que mostrar">
+              <button type="button" aria-pressed={aba === 'visitas'} onClick={() => setAba('visitas')}>
+                <ListChecks className="size-5" aria-hidden />
+                Visitas
+              </button>
+              <button type="button" aria-pressed={aba === 'risco'} onClick={() => setAba('risco')}>
+                <ShieldAlert className="size-5" aria-hidden />
+                Risco da área
+              </button>
+            </div>
+            {aba === 'risco' ? (
+              <PainelDeRisco visitas={[...pendentes, ...demais]} aberta={aberta} aoAbrir={setAberta} />
+            ) : (
+              <>
             <header>
               <h2 className="text-2xl leading-tight font-bold tracking-tight">
                 Para visitar <span className="font-medium text-muted-foreground">{pendentes.length}</span>
@@ -236,6 +252,8 @@ function Tablet({ acs, agentes, escolher }: { acs: Profissional; agentes: Profis
                   ))}
                 </ul>
               </section>
+            )}
+              </>
             )}
           </div>
         </section>

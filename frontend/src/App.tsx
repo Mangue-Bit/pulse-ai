@@ -3,6 +3,7 @@ import { AreaEquipe } from '@/areas/equipe/AreaEquipe'
 import { VisaoGeral } from '@/areas/equipe/VisaoGeral'
 import { AreaPaciente } from '@/areas/paciente/AreaPaciente'
 import { AreaPalco } from '@/areas/palco/AreaPalco'
+import { AreaPerfis } from '@/areas/perfis/AreaPerfis'
 import { AreaRastro } from '@/areas/rastro/AreaRastro'
 import { BarraSuperior } from '@/componentes/BarraSuperior'
 import { NavegacaoLateral } from '@/componentes/NavegacaoLateral'
@@ -15,6 +16,7 @@ function Tela() {
   if (tela === 'rastro') return <AreaRastro />
   if (tela === 'palco') return <AreaPalco />
   if (tela === 'campo') return <AreaCampo />
+  if (tela === 'perfis') return <AreaPerfis />
   return <AreaPaciente />
 }
 

@@ -62,3 +62,17 @@ export function montarVisitas(pacientes: Paciente[], territorio: Territorio | nu
       .sort((a, b) => a.paciente.nome.localeCompare(b.paciente.nome, 'pt-BR')),
   }
 }
+
+const plural = (quantidade: number, um: string, varios: string) => `${quantidade} ${quantidade === 1 ? um : varios}`
+
+export function sinaisDeAtencao(visita: Visita): string[] {
+  const { paciente } = visita
+  return [
+    visita.prioritaria && 'Urgência em aberto',
+    paciente.situacao === 'internado' && 'Internado',
+    paciente.situacao === 'aceite_revogado' && 'Retirou a autorização',
+    visita.pedirAutorizacao && 'Sem autorização de contato',
+    visita.aguardando !== null && 'Ajuda em andamento',
+    visita.tarefas.length > 0 && plural(visita.tarefas.length, 'tarefa aberta', 'tarefas abertas'),
+  ].filter((sinal): sinal is string => Boolean(sinal))
+}
