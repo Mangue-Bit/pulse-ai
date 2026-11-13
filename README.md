@@ -1,10 +1,10 @@
 # Pulse
 
-**Uma solução agêntica de acompanhamento da atenção primária à saúde, que descobre por que o paciente parou o tratamento e coloca a ação certa nas mãos da equipe.**
+**Uma solução agêntica de acompanhamento da atenção primária à saúde, que descobre por que o paciente parou o tratamento e leva até ele a intervenção certa para retomá-lo.**
 
 Metade dos pacientes com doenças crônicas não segue o tratamento como prescrito (OMS, 2003). Quase sempre o motivo não é clínico: a pessoa não consegue ler a receita, se perde entre seis remédios, mora sozinha ou acha que já está boa. A equipe de Saúde da Família costuma descobrir isso tarde.
 
-Com o Pulse, o paciente conta a dificuldade do jeito dele, por texto ou voz. Os agentes entendem o relato, identificam a barreira, buscam contexto com fonte e preparam uma intervenção. A equipe aprova com um clique e o agente comunitário de saúde (ACS) fecha o ciclo em campo. **Nenhuma ação chega ao paciente sem aprovação humana.**
+Com o Pulse, o paciente conta a dificuldade do jeito dele, por texto ou voz. Os agentes entendem o relato, identificam a barreira e montam a intervenção sob medida, com base em bulas, protocolos e no histórico do paciente. Pode ser um áudio explicando a receita para quem não lê, um quadro de horários para quem toma muitos remédios ou uma visita do agente comunitário de saúde (ACS) para organizar a medicação em casa. A equipe aprova com um clique, a intervenção chega ao paciente e o ACS confirma em campo se a barreira foi superada. **Nenhuma ação chega ao paciente sem aprovação humana.**
 
 > Protótipo com dados 100% fictícios. Não substitui avaliação clínica.
 
