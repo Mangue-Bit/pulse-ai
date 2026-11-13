@@ -6,6 +6,12 @@
 # Anotações locais de cada desenvolvedor
 _local/
 
+# Configuração de assistente de código
+.claude/
+.agents/
+.codex/
+skills-lock.json
+
 # Python
 .venv/
 __pycache__/
@@ -14,8 +20,27 @@ __pycache__/
 
 # Banco e índices gerados
 *.db
+*.db-shm
+*.db-wal
+*.db-journal
 *.sqlite3
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.sqlite3-shm
+*.sqlite3-wal
 backend/dados/indice/
+
+# Credenciais e exportações locais
+*.pem
+*.key
+*.p12
+*.pfx
+*.log
+*.tsbuildinfo
+coverage/
+.coverage
+htmlcov/
 
 # Frontend
 node_modules/
