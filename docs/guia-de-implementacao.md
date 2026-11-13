@@ -161,6 +161,7 @@ class Evento(BaseModel):                 # rastro
     id: str
     caso_id: str | None
     paciente_id: str
+    interacao_id: str | None             # liga as etapas de uma mesma entrada antes de existir caso
     etapa: str                           # identificador do fluxo, por exemplo "C18"
     ator: Literal["regra", "modelo", "pessoa", "ferramenta"]
     entrada: dict
@@ -174,11 +175,18 @@ class Evento(BaseModel):                 # rastro
     criado_em: datetime
 ```
 
+`certeza` e `taxa_sucesso` ficam entre 0 e 1, e `rodada` começa em 1. `MensagemAprovada` não aceita `texto`, `aprovada_por` nem `chave_unica` vazios.
+
+O `interacao_id` do evento identifica uma entrada (uma mensagem do paciente, um registro do ACS ou um avanço do relógio). As etapas da Escuta acontecem antes de existir caso; quando o orquestrador abre ou retoma o caso (C08), os eventos daquela interação recebem o `caso_id`. Assim o rastro do caso mostra a cadeia inteira, da mensagem ao resultado.
+
 Mudança em contrato é combinada entre as duas frentes antes de ser feita.
 
 ## 5. Dados
 
-Tabelas: `paciente`, `aceite`, `microarea`, `acs`, `conversa`, `relato`, `caso`, `proposta`, `execucao`, `tarefa_acs`, `relatorio`, `alerta`, `duvida`, `resultado`, `evento`.
+Tabelas: `paciente`, `aceite`, `microarea`, `acs`, `conversa`, `relato`, `caso`, `proposta`, `execucao`, `tarefa_acs`, `relatorio`, `alerta`, `duvida`, `resultado`, `evento`, `lista_territorio`, `relogio`.
+
+- `lista_territorio` guarda a lista priorizada de cada microárea, gravada pela ferramenta `atualizar_lista`.
+- `relogio` guarda o deslocamento do relógio do sistema em relação ao relógio real.
 
 - `execucao` tem restrição de unicidade em `chave_unica`. É isso que impede o envio duplicado.
 - `conversa` tem `expira_em`. A conversa bruta expira antes do histórico.
