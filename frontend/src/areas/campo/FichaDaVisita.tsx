@@ -14,6 +14,7 @@ import {
   MicOff,
   NotebookPen,
   Phone,
+  ShieldAlert,
   Siren,
   type LucideIcon,
 } from 'lucide-react'
@@ -22,11 +23,11 @@ import { api, type Profissional } from '@/api'
 import { useVoz } from '@/areas/paciente/useVoz'
 import { useEstado } from '@/estado'
 import { useAcao } from '@/lib/acao'
-import { BARREIRA, dia, rotulo, SITUACAO } from '@/lib/formato'
+import { BARREIRA, dia, porcento, rotulo, SITUACAO } from '@/lib/formato'
 import { cn } from '@/lib/utils'
 
 import type { Destino, FilaDeEnvio, TipoDeRegistro } from './useFilaDeEnvio'
-import type { Visita } from './visitas'
+import { sinaisDeAtencao, type Visita } from './visitas'
 
 const TIPOS: { id: TipoDeRegistro; nome: string; icone: LucideIcon }[] = [
   { id: 'visita', nome: 'Visita em casa', icone: House },
@@ -342,6 +343,7 @@ function Registro({ visita, acs, fila, aoMudar }: PropsDoFormulario) {
 export function FichaDaVisita({ visita, acs, fila, aoMudar, aoVoltar }: PropsDoFormulario & { aoVoltar: () => void }) {
   const [saudeVisivel, setSaudeVisivel] = useState(false)
   const { paciente } = visita
+  const sinais = sinaisDeAtencao(visita)
   const motivos = [
     visita.motivo,
     visita.aviso,
@@ -367,6 +369,22 @@ export function FichaDaVisita({ visita, acs, fila, aoMudar, aoVoltar }: PropsDoF
           </p>
         )}
       </header>
+
+      <Bloco titulo="Risco de parar o tratamento" icone={ShieldAlert} tom={paciente.alto_risco ? 'text-equipe' : undefined}>
+        <p className="flex items-baseline gap-2">
+          <strong className={cn('font-display text-2xl', paciente.alto_risco ? 'text-equipe' : 'text-foreground')}>
+            {paciente.alto_risco ? 'Alto' : 'Habitual'}
+          </strong>
+          <span className="text-foreground/80">{porcento(paciente.risco_abandono)} de chance, segundo o modelo de risco</span>
+        </p>
+        <span className="mt-2 block h-2.5 overflow-hidden rounded-full bg-secondary" aria-hidden>
+          <span
+            className={cn('block h-full rounded-full', paciente.alto_risco ? 'bg-equipe' : 'bg-lateral')}
+            style={{ width: `${Math.round(paciente.risco_abandono * 100)}%` }}
+          />
+        </span>
+        {sinais.length > 0 && <p className="mt-2 leading-snug font-medium">{sinais.join(' · ')}</p>}
+      </Bloco>
 
       <Bloco titulo="Por que visitar" icone={CalendarClock} tom={visita.prioritaria ? 'text-urgencia' : 'text-marca'}>
         {motivos.length === 0 ? (

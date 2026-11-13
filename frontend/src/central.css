@@ -139,6 +139,11 @@
 .palco-coluna > header > :last-child { min-width: 0; }
 .palco-coluna > header svg { flex: none; width: 16px; height: 16px; color: var(--muted-foreground); }
 
+/* Quem usa o Pulse */
+.tela-perfis { display: flex; flex-direction: column; gap: 18px; max-width: 1320px; margin: 0 auto; padding: 28px 32px 32px; }
+.tela-perfis h1 { font-size: 26px; font-weight: 700; line-height: 1.2; letter-spacing: -.02em; }
+.perfis-grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 16px; }
+
 /* Pulse em campo */
 .tela-campo { display: flex; flex-direction: column; gap: 12px; height: 100%; padding: 20px 28px; }
 .campo-cabecalho { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; }
@@ -150,6 +155,9 @@
 .campo-paineis { display: grid; flex: 1; grid-template-columns: minmax(0, 1fr); min-height: 0; }
 .campo-lista, .campo-ficha { min-height: 0; }
 .campo-ecra[data-aberta='true'] .campo-lista, .campo-ecra[data-aberta='false'] .campo-ficha { display: none; }
+.campo-abas { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: 14px; background: var(--secondary); }
+.campo-abas button { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; border-radius: 10px; font-weight: 700; color: var(--muted-foreground); }
+.campo-abas button[aria-pressed='true'] { background: var(--card); color: var(--marca); box-shadow: 0 1px 2px rgb(29 26 43 / 12%); }
 .campo-voltar { display: flex; }
 .campo-sair { display: none; }
 

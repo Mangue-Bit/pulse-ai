@@ -25,9 +25,9 @@ export type AbaEquipe =
   | 'relatorios'
   | 'gestor'
 
-export type Tela = 'paciente' | 'equipe' | 'rastro' | 'palco' | 'campo'
+export type Tela = 'paciente' | 'equipe' | 'rastro' | 'palco' | 'campo' | 'perfis'
 
-const TELAS_COM_ENDERECO: Tela[] = ['paciente', 'rastro', 'palco', 'campo']
+const TELAS_COM_ENDERECO: Tela[] = ['paciente', 'rastro', 'palco', 'campo', 'perfis']
 
 const ABAS: AbaEquipe[] = ['visao-geral', 'alertas', 'duvidas', 'aprovacoes', 'casos', 'acs', 'territorio', 'relatorios', 'gestor']
 

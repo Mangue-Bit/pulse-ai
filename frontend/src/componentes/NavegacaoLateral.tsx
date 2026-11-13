@@ -13,6 +13,7 @@ import {
   Route,
   Siren,
   Tablet,
+  Users,
   type LucideIcon,
 } from 'lucide-react'
 import { useState } from 'react'
@@ -83,6 +84,11 @@ export function NavegacaoLateral() {
           onClick={() => navegar(() => irPara('palco'))}>
           <Presentation aria-hidden />
           Demonstração guiada
+        </button>
+        <button type="button" className="lateral-palco" aria-current={tela === 'perfis' ? 'page' : undefined}
+          onClick={() => navegar(() => irPara('perfis'))}>
+          <Users aria-hidden />
+          Quem usa o Pulse
         </button>
         <nav aria-label="Telas do Pulse">
           {GRUPOS.map(({ titulo, secoes }) => (
