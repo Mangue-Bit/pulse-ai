@@ -1,0 +1,28 @@
+# Segredos e configuração local
+.env
+.env.*
+!.env.example
+
+# Anotações locais de cada desenvolvedor
+_local/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Banco e índices gerados
+*.db
+*.sqlite3
+backend/dados/indice/
+
+# Frontend
+node_modules/
+dist/
+
+# Sistema e editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
