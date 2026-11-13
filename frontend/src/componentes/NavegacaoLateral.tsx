@@ -12,6 +12,7 @@ import {
   Presentation,
   Route,
   Siren,
+  Tablet,
   type LucideIcon,
 } from 'lucide-react'
 import { useState } from 'react'
@@ -100,6 +101,11 @@ export function NavegacaoLateral() {
               })}
             </div>
           ))}
+          <p>Em campo</p>
+          <button type="button" aria-current={tela === 'campo' ? 'page' : undefined} onClick={() => navegar(() => irPara('campo'))}>
+            <Tablet aria-hidden />
+            Tablet da ACS
+          </button>
           <p>Bastidores</p>
           <button type="button" aria-current={tela === 'paciente' ? 'page' : undefined} onClick={() => navegar(() => irPara('paciente'))}>
             <MessagesSquare aria-hidden />

@@ -25,14 +25,16 @@ export type AbaEquipe =
   | 'relatorios'
   | 'gestor'
 
-export type Tela = 'paciente' | 'equipe' | 'rastro' | 'palco'
+export type Tela = 'paciente' | 'equipe' | 'rastro' | 'palco' | 'campo'
+
+const TELAS_COM_ENDERECO: Tela[] = ['paciente', 'rastro', 'palco', 'campo']
 
 const ABAS: AbaEquipe[] = ['visao-geral', 'alertas', 'duvidas', 'aprovacoes', 'casos', 'acs', 'territorio', 'relatorios', 'gestor']
 
 /** Lê a tela e a aba da equipe do endereço (#/equipe/aprovacoes), para o link e o recarregamento manterem o lugar. */
 function lerEndereco(): { tela: Tela; aba: AbaEquipe | null } {
   const [tela, aba] = window.location.hash.replace(/^#\/?/, '').split('/')
-  const valida = tela === 'paciente' || tela === 'rastro' || tela === 'palco' ? tela : 'equipe'
+  const valida = TELAS_COM_ENDERECO.find((conhecida) => conhecida === tela) ?? 'equipe'
   return { tela: valida, aba: ABAS.includes(aba as AbaEquipe) ? (aba as AbaEquipe) : null }
 }
 
@@ -70,6 +72,8 @@ interface Estado {
   rastro: OrigemDoRastro
   mostrarRastro: (origem: OrigemDoRastro) => void
   recarregarTudo: () => void
+  geracao: number
+  reiniciarDemonstracao: () => Promise<void>
 }
 
 const Contexto = createContext<Estado | null>(null)
@@ -91,6 +95,7 @@ export function ProvedorDeEstado({ children }: { children: ReactNode }) {
   const [aba, setAba] = useState<AbaEquipe>(() => lerEndereco().aba ?? 'visao-geral')
   const [propostaEmFoco, setPropostaEmFoco] = useState<string | null>(null)
   const [rastro, setRastro] = useState<OrigemDoRastro>({ tipo: 'paciente' })
+  const [geracao, setGeracao] = useState(0)
 
   useEffect(() => escreverEndereco(tela, aba), [tela, aba])
   useEffect(() => {
@@ -147,6 +152,14 @@ export function ProvedorDeEstado({ children }: { children: ReactNode }) {
     for (const consulta of [pacientes, relogio, alertas, duvidas, propostas, casos]) void consulta.recarregar()
   }, [pacientes, relogio, alertas, duvidas, propostas, casos])
 
+  const reiniciarDemonstracao = useCallback(async () => {
+    await api.reiniciarDemonstracao()
+    setRastro({ tipo: 'paciente' })
+    setPropostaEmFoco(null)
+    await Promise.all([pacientes, relogio, alertas, duvidas, propostas, casos].map((consulta) => consulta.recarregar()))
+    setGeracao((atual) => atual + 1)
+  }, [pacientes, relogio, alertas, duvidas, propostas, casos])
+
   const valor: Estado = {
     saude,
     conectado,
@@ -170,6 +183,8 @@ export function ProvedorDeEstado({ children }: { children: ReactNode }) {
     rastro,
     mostrarRastro,
     recarregarTudo,
+    geracao,
+    reiniciarDemonstracao,
   }
 
   return <Contexto.Provider value={valor}>{children}</Contexto.Provider>
