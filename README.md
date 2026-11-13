@@ -51,6 +51,6 @@ Os testes do backend usam um banco temporário e o modelo simulado.
 
 ## Contribuição e segurança
 
-Crie branches `feat/`, `fix/`, `docs/` ou `chore/`, use Conventional Commits e integre primeiro em `development`. Após validação, promova `development` para `main`.
+Crie branches `feat/`, `fix/`, `docs/` ou `chore/`, use Conventional Commits e integre primeiro em `develop`. Após validação, promova `develop` para `main`.
 
 Não versione chaves, `.env`, bancos SQLite, dados reais de pacientes, dependências instaladas ou anotações de `_local/`. O `.env.example` contém somente configurações de exemplo e campos de credenciais vazios.
