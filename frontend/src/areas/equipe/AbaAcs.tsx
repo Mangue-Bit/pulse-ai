@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { BellRing, ClipboardList, NotebookPen, UserRound } from 'lucide-react'
 
 import { api, type Caso, type Profissional } from '@/api'
-import { Cartao, Etiqueta, Rotulo, Selecao, Vazio } from '@/componentes/basicos'
+import { Cartao, Etiqueta, Selecao, Vazio } from '@/componentes/basicos'
 import { Button } from '@/componentes/ui/button'
 import { Textarea } from '@/componentes/ui/textarea'
 import { useEstado } from '@/estado'
@@ -149,7 +149,7 @@ function RegistroDeVisita({ acs, aoRegistrar }: { acs: Profissional; aoRegistrar
           setFeito(false)
         }}
         rows={3}
-        placeholder="O que foi visto ou combinado. O texto entra no Cuidado como dado e alimenta o relatório do paciente."
+        placeholder="O que foi visto ou combinado na visita"
         aria-label="Texto do registro"
         className="text-[0.95rem]"
       />
@@ -167,7 +167,7 @@ function RegistroDeVisita({ acs, aoRegistrar }: { acs: Profissional; aoRegistrar
         >
           Registrar
         </Button>
-        {feito && <p className="text-sm font-medium text-concluido">Registro enviado ao Cuidado.</p>}
+        {feito && <p className="text-sm font-medium text-concluido">Registro salvo.</p>}
       </div>
       {erro && <p className="text-sm font-medium text-urgencia">{erro}</p>}
     </Cartao>
@@ -210,10 +210,7 @@ export function AbaAcs() {
             <span className="ml-auto text-sm font-bold">{abertas.length}</span>
           </header>
           {abertas.length === 0 && (
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              Nenhuma tarefa aberta. Tarefas chegam quando a equipe aprova uma ação presencial ou quando um caso vira
-              tarefa manual.
-            </p>
+            <p className="text-sm leading-relaxed text-muted-foreground">Nenhuma tarefa aberta.</p>
           )}
           {abertas.map((tarefa) => (
             <div key={tarefa.id} className="border-t pt-2 first:border-t-0 first:pt-0">
@@ -231,14 +228,11 @@ export function AbaAcs() {
         <Cartao className="flex flex-col gap-2">
           <header className="flex items-center gap-2">
             <BellRing className="size-4 text-escuta" aria-hidden />
-            <h3 className="text-sm font-bold">Avisos da Escuta</h3>
+            <h3 className="text-sm font-bold">Avisos</h3>
             <span className="ml-auto text-sm font-bold">{avisos.length}</span>
           </header>
           {avisos.length === 0 && (
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              Nenhum aviso. Quando um paciente sem aceite escreve, a Escuta só orienta e avisa o ACS, que pede o aceite
-              na visita.
-            </p>
+            <p className="text-sm leading-relaxed text-muted-foreground">Nenhum aviso.</p>
           )}
           {avisos.map((aviso) => (
             <div key={`${aviso.paciente_id}-${aviso.criado_em}`} className="border-t pt-2 first:border-t-0 first:pt-0">
@@ -252,11 +246,10 @@ export function AbaAcs() {
 
       <Cartao className="flex flex-col gap-3">
         <header>
-          <h3 className="text-sm font-bold">Casos aguardando o resultado</h3>
-          <Rotulo>O registro do ACS encerra o caso, abre nova rodada ou leva à busca ativa.</Rotulo>
+          <h3 className="text-sm font-bold">Registrar o resultado da visita</h3>
         </header>
         {aguardando.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nenhum caso da microárea aguarda resultado.</p>
+          <p className="text-sm text-muted-foreground">Nenhuma visita aguardando resultado.</p>
         ) : (
           aguardando.map((caso) => (
             <FormularioDeResultado key={caso.caso_id} caso={caso} acs={acs} aoRegistrar={recarregar} />

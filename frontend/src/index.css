@@ -1,50 +1,54 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import '@fontsource-variable/figtree';
-@import '@fontsource-variable/fraunces';
+@import '@fontsource-variable/montserrat';
 
 @custom-variant dark (&:is(.dark *));
 
 :root {
   /* Superfícies e tinta */
-  --background: #eef1f5;
-  --foreground: #18212f;
+  --background: #f6f5f9;
+  --foreground: #1d1a2b;
   --card: #ffffff;
-  --card-foreground: #18212f;
+  --card-foreground: #1d1a2b;
   --popover: #ffffff;
-  --popover-foreground: #18212f;
-  --primary: #1d2b4a;
+  --popover-foreground: #1d1a2b;
+  --primary: #5e17eb;
   --primary-foreground: #ffffff;
-  --secondary: #e6eaf0;
-  --secondary-foreground: #18212f;
-  --muted: #e9edf2;
-  --muted-foreground: #586377;
-  --accent: #e6eaf0;
-  --accent-foreground: #18212f;
+  --secondary: #eeecf3;
+  --secondary-foreground: #1d1a2b;
+  --muted: #f0eef5;
+  --muted-foreground: #5d586c;
+  --accent: #eeecf3;
+  --accent-foreground: #1d1a2b;
   --destructive: #c9302f;
-  --border: #d5dbe4;
-  --input: #c6cdd8;
-  --ring: #5b7bd6;
+  --border: #e4e1ec;
+  --input: #cdc9d8;
+  --ring: #5e17eb;
   --radius: 0.625rem;
 
+  --marca: #5e17eb;
+  --marca-suave: #f1ebfe;
+  --apagado: #c9c5d4;
+
   /* Cores do fluxograma */
-  --escuta: #2463c8;
-  --escuta-suave: #e4edfb;
-  --urgencia: #c9302f;
-  --urgencia-suave: #fde8e6;
-  --cuidado: #7448c9;
-  --cuidado-suave: #efe8fb;
-  --equipe: #c96a0a;
-  --equipe-suave: #fdefd9;
-  --concluido: #23874f;
-  --concluido-suave: #def3e6;
-  --lateral: #6c7686;
-  --lateral-suave: #e8ebef;
+  --escuta: #5e17eb;
+  --escuta-suave: #f1ebfe;
+  --urgencia: #b3262f;
+  --urgencia-suave: #fdecec;
+  --cuidado: #00778e;
+  --cuidado-suave: #e2f3f6;
+  --equipe: #8a5300;
+  --equipe-suave: #fdf1dc;
+  --concluido: #17703f;
+  --concluido-suave: #e3f5ea;
+  --lateral: #6b677a;
+  --lateral-suave: #eceaf1;
 }
 
 @theme inline {
   --font-sans: 'Figtree Variable', ui-sans-serif, system-ui, sans-serif;
-  --font-serif: 'Fraunces Variable', ui-serif, Georgia, serif;
+  --font-display: 'Montserrat Variable', 'Figtree Variable', ui-sans-serif, system-ui, sans-serif;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -64,6 +68,9 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+
+  --color-marca: var(--marca);
+  --color-marca-suave: var(--marca-suave);
 
   --color-escuta: var(--escuta);
   --color-escuta-suave: var(--escuta-suave);
@@ -91,7 +98,7 @@
   }
 
   html {
-    font-size: 15px;
+    font-size: 16px;
   }
 
   body {
@@ -113,7 +120,7 @@
 .rolagem {
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: #c3cad6 transparent;
+  scrollbar-color: var(--apagado) transparent;
 }
 
 @media (prefers-reduced-motion: reduce) {

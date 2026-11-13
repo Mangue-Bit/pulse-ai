@@ -15,6 +15,7 @@ import {
 import { useConsulta, type Consulta } from '@/lib/consulta'
 
 export type AbaEquipe =
+  | 'visao-geral'
   | 'alertas'
   | 'duvidas'
   | 'aprovacoes'
@@ -23,6 +24,24 @@ export type AbaEquipe =
   | 'territorio'
   | 'relatorios'
   | 'gestor'
+
+export type Tela = 'paciente' | 'equipe' | 'rastro' | 'palco' | 'campo'
+
+const TELAS_COM_ENDERECO: Tela[] = ['paciente', 'rastro', 'palco', 'campo']
+
+const ABAS: AbaEquipe[] = ['visao-geral', 'alertas', 'duvidas', 'aprovacoes', 'casos', 'acs', 'territorio', 'relatorios', 'gestor']
+
+/** Lê a tela e a aba da equipe do endereço (#/equipe/aprovacoes), para o link e o recarregamento manterem o lugar. */
+function lerEndereco(): { tela: Tela; aba: AbaEquipe | null } {
+  const [tela, aba] = window.location.hash.replace(/^#\/?/, '').split('/')
+  const valida = TELAS_COM_ENDERECO.find((conhecida) => conhecida === tela) ?? 'equipe'
+  return { tela: valida, aba: ABAS.includes(aba as AbaEquipe) ? (aba as AbaEquipe) : null }
+}
+
+function escreverEndereco(tela: Tela, aba: AbaEquipe) {
+  const destino = tela === 'equipe' ? `#/equipe/${aba}` : `#/${tela}`
+  if (window.location.hash !== destino) window.history.replaceState(null, '', destino)
+}
 
 /** De onde vêm os eventos mostrados no painel do rastro. */
 export type OrigemDoRastro =
@@ -45,11 +64,16 @@ interface Estado {
   duvidas: Consulta<Duvida[]>
   propostas: Consulta<Proposta[]>
   casos: Consulta<Caso[]>
+  tela: Tela
+  irPara: (tela: Tela) => void
   aba: AbaEquipe
-  abrirAba: (aba: AbaEquipe) => void
+  abrirAba: (aba: AbaEquipe, propostaId?: string) => void
+  propostaEmFoco: string | null
   rastro: OrigemDoRastro
   mostrarRastro: (origem: OrigemDoRastro) => void
   recarregarTudo: () => void
+  geracao: number
+  reiniciarDemonstracao: () => Promise<void>
 }
 
 const Contexto = createContext<Estado | null>(null)
@@ -67,8 +91,35 @@ export function ProvedorDeEstado({ children }: { children: ReactNode }) {
 
   const [pacienteId, setPacienteId] = useState<string | null>(null)
   const [atuandoId, setAtuandoId] = useState<string | null>(null)
-  const [aba, setAba] = useState<AbaEquipe>('aprovacoes')
+  const [tela, setTela] = useState<Tela>(() => lerEndereco().tela)
+  const [aba, setAba] = useState<AbaEquipe>(() => lerEndereco().aba ?? 'visao-geral')
+  const [propostaEmFoco, setPropostaEmFoco] = useState<string | null>(null)
   const [rastro, setRastro] = useState<OrigemDoRastro>({ tipo: 'paciente' })
+  const [geracao, setGeracao] = useState(0)
+
+  useEffect(() => escreverEndereco(tela, aba), [tela, aba])
+  useEffect(() => {
+    const aoMudar = () => {
+      const lido = lerEndereco()
+      setTela(lido.tela)
+      if (lido.aba) setAba(lido.aba)
+      setPropostaEmFoco(null)
+    }
+    window.addEventListener('hashchange', aoMudar)
+    return () => window.removeEventListener('hashchange', aoMudar)
+  }, [])
+
+  const abrirAba = useCallback((nova: AbaEquipe, propostaId?: string) => {
+    setAba(nova)
+    setTela('equipe')
+    setPropostaEmFoco(propostaId ?? null)
+  }, [])
+
+  // Abrir o rastro de um caso leva à tela do rastro; voltar ao vivo não muda de tela.
+  const mostrarRastro = useCallback((origem: OrigemDoRastro) => {
+    setRastro(origem)
+    if (origem.tipo !== 'paciente') setTela('rastro')
+  }, [])
 
   const paciente = useMemo(() => {
     const lista = pacientes.dados ?? []
@@ -101,6 +152,14 @@ export function ProvedorDeEstado({ children }: { children: ReactNode }) {
     for (const consulta of [pacientes, relogio, alertas, duvidas, propostas, casos]) void consulta.recarregar()
   }, [pacientes, relogio, alertas, duvidas, propostas, casos])
 
+  const reiniciarDemonstracao = useCallback(async () => {
+    await api.reiniciarDemonstracao()
+    setRastro({ tipo: 'paciente' })
+    setPropostaEmFoco(null)
+    await Promise.all([pacientes, relogio, alertas, duvidas, propostas, casos].map((consulta) => consulta.recarregar()))
+    setGeracao((atual) => atual + 1)
+  }, [pacientes, relogio, alertas, duvidas, propostas, casos])
+
   const valor: Estado = {
     saude,
     conectado,
@@ -116,11 +175,16 @@ export function ProvedorDeEstado({ children }: { children: ReactNode }) {
     duvidas,
     propostas,
     casos,
+    tela,
+    irPara: setTela,
     aba,
-    abrirAba: setAba,
+    abrirAba,
+    propostaEmFoco,
     rastro,
-    mostrarRastro: setRastro,
+    mostrarRastro,
     recarregarTudo,
+    geracao,
+    reiniciarDemonstracao,
   }
 
   return <Contexto.Provider value={valor}>{children}</Contexto.Provider>

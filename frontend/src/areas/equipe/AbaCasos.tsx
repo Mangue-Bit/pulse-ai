@@ -8,7 +8,7 @@ import { Button } from '@/componentes/ui/button'
 import { useEstado } from '@/estado'
 import type { Cor } from '@/fluxo'
 import { useConsulta } from '@/lib/consulta'
-import { BARREIRA, diaEHora, ESTADO_PROPOSTA, porcento, rotulo, SITUACAO, STATUS_CASO } from '@/lib/formato'
+import { BARREIRA, diaEHora, ESTADO_PROPOSTA, rotulo, SITUACAO, STATUS_CASO } from '@/lib/formato'
 
 import { Fontes } from './AbaAprovacoes'
 
@@ -42,11 +42,11 @@ function Detalhe({ casoId, aoVoltar }: { casoId: string; aoVoltar: () => void })
         <div className="ml-auto flex gap-2">
           <Button variant="outline" size="sm" onClick={() => verRastro(false)}>
             <History data-icon="inline-start" />
-            Ver rastro
+            Ver como o Pulse decidiu
           </Button>
           <Button variant="outline" size="sm" onClick={() => verRastro(true)}>
             <Play data-icon="inline-start" />
-            Reproduzir rastro
+            Reproduzir passo a passo
           </Button>
         </div>
       </div>
@@ -88,14 +88,13 @@ function Detalhe({ casoId, aoVoltar }: { casoId: string; aoVoltar: () => void })
       </Cartao>
 
       <Cartao className="flex flex-col gap-2">
-        <h4 className="text-sm font-bold">Relatos do paciente</h4>
-        {caso.relatos.length === 0 && <p className="text-sm text-muted-foreground">Este caso não nasceu de um relato do paciente.</p>}
+        <h4 className="text-sm font-bold">O que o paciente contou</h4>
+        {caso.relatos.length === 0 && <p className="text-sm text-muted-foreground">Este caso começou sem mensagem do paciente.</p>}
         {caso.relatos.map((relato) => (
           <div key={relato.id} className="flex flex-col gap-1">
             <TrechoLiteral>{relato.trecho_literal}</TrechoLiteral>
             <p className="text-xs text-muted-foreground">
-              {diaEHora(relato.criado_em)}, {rotulo(BARREIRA, relato.barreira).toLowerCase()}, certeza{' '}
-              {porcento(relato.certeza)}
+              {diaEHora(relato.criado_em)}, {rotulo(BARREIRA, relato.barreira).toLowerCase()}
               {relato.lembrete && `, pediu lembrete: ${relato.lembrete}`}
             </p>
           </div>
@@ -103,8 +102,8 @@ function Detalhe({ casoId, aoVoltar }: { casoId: string; aoVoltar: () => void })
       </Cartao>
 
       <Cartao className="flex flex-col gap-2">
-        <h4 className="text-sm font-bold">Propostas</h4>
-        {caso.propostas.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma proposta neste caso.</p>}
+        <h4 className="text-sm font-bold">Sugestões do Pulse</h4>
+        {caso.propostas.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma sugestão neste caso.</p>}
         {caso.propostas.map((proposta) => (
           <div key={proposta.id} className="flex flex-col gap-1.5 border-t pt-2 first:border-t-0 first:pt-0">
             <div className="flex flex-wrap items-center gap-2">
@@ -126,7 +125,7 @@ function Detalhe({ casoId, aoVoltar }: { casoId: string; aoVoltar: () => void })
 
       <div className="grid grid-cols-2 gap-3">
         <Cartao className="flex flex-col gap-2">
-          <h4 className="text-sm font-bold">Tarefas do ACS</h4>
+          <h4 className="text-sm font-bold">Tarefas do agente comunitário</h4>
           {caso.tarefas.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma tarefa criada.</p>}
           {caso.tarefas.map((tarefa) => (
             <div key={tarefa.id} className="text-sm">
@@ -140,7 +139,7 @@ function Detalhe({ casoId, aoVoltar }: { casoId: string; aoVoltar: () => void })
         </Cartao>
         <Cartao className="flex flex-col gap-2">
           <h4 className="text-sm font-bold">Resultados registrados</h4>
-          {caso.resultados.length === 0 && <p className="text-sm text-muted-foreground">O ACS ainda não registrou resultado.</p>}
+          {caso.resultados.length === 0 && <p className="text-sm text-muted-foreground">Nenhum resultado registrado ainda.</p>}
           {caso.resultados.map((resultado) => (
             <div key={resultado.id} className="text-sm">
               <p className="font-semibold">
@@ -167,8 +166,8 @@ export function AbaCasos() {
 
   if (lista.length === 0) {
     return (
-      <Vazio icone={FolderOpen} titulo="Nenhum caso aberto">
-        O orquestrador abre um caso quando chega um relato do paciente, um registro do ACS ou uma checagem por tempo.
+      <Vazio icone={FolderOpen} titulo="Nenhum caso em acompanhamento">
+        Um caso começa quando um paciente conta uma dificuldade ou o agente comunitário registra uma visita.
       </Vazio>
     )
   }
@@ -179,7 +178,7 @@ export function AbaCasos() {
         <thead className="bg-muted/70 text-xs text-muted-foreground">
           <tr>
             <th className="px-3 py-2 font-semibold">Paciente</th>
-            <th className="px-3 py-2 font-semibold">Barreira</th>
+            <th className="px-3 py-2 font-semibold">Dificuldade</th>
             <th className="px-3 py-2 font-semibold">Status</th>
             <th className="px-3 py-2 text-center font-semibold">Rodada</th>
             <th className="px-3 py-2 font-semibold">Atualizado</th>
