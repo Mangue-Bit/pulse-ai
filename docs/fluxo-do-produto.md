@@ -230,4 +230,4 @@ Um identificador por caso liga todas as etapas. É por ele que a equipe investig
 - Caixas tracejadas são agentes especialistas.
 - Os círculos numerados indicam o módulo do AKCIT.
 
-A interface do produto usa as mesmas cores: azul para a Escuta, vermelho para a urgência, roxo para o Cuidado, laranja para as decisões da equipe e verde para o que foi concluído.
+A interface do produto usa as cores da identidade do Pulse: violeta para a Escuta, vermelho para a urgência, azul-petróleo para o Cuidado, laranja para as decisões da equipe e verde para o que foi concluído.

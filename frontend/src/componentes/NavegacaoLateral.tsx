@@ -1,20 +1,52 @@
-import { Menu } from 'lucide-react'
+import {
+  ChartColumn,
+  ClipboardCheck,
+  FileText,
+  FolderHeart,
+  Footprints,
+  LayoutDashboard,
+  MapPinned,
+  Menu,
+  MessageCircleQuestion,
+  MessagesSquare,
+  Presentation,
+  Route,
+  Siren,
+  type LucideIcon,
+} from 'lucide-react'
 import { useState } from 'react'
 
 import { Selecao } from '@/componentes/basicos'
+import { Marca } from '@/componentes/Marca'
 import { useEstado, type AbaEquipe } from '@/estado'
 import { PAPEL } from '@/lib/formato'
 
-const SECOES: { id: AbaEquipe; nome: string }[] = [
-  { id: 'visao-geral', nome: 'Visão geral' },
-  { id: 'alertas', nome: 'Alertas' },
-  { id: 'duvidas', nome: 'Dúvidas' },
-  { id: 'aprovacoes', nome: 'Aprovações' },
-  { id: 'casos', nome: 'Casos' },
-  { id: 'acs', nome: 'Agente comunitário' },
-  { id: 'territorio', nome: 'Território' },
-  { id: 'relatorios', nome: 'Relatórios' },
-  { id: 'gestor', nome: 'Visão do gestor' },
+interface Secao {
+  id: AbaEquipe
+  nome: string
+  icone: LucideIcon
+}
+
+const GRUPOS: { titulo: string; secoes: Secao[] }[] = [
+  {
+    titulo: 'Atendimento',
+    secoes: [
+      { id: 'visao-geral', nome: 'Visão geral', icone: LayoutDashboard },
+      { id: 'alertas', nome: 'Alertas', icone: Siren },
+      { id: 'duvidas', nome: 'Dúvidas', icone: MessageCircleQuestion },
+      { id: 'aprovacoes', nome: 'Aprovações', icone: ClipboardCheck },
+      { id: 'casos', nome: 'Casos', icone: FolderHeart },
+    ],
+  },
+  {
+    titulo: 'Território e gestão',
+    secoes: [
+      { id: 'acs', nome: 'Agente comunitário', icone: Footprints },
+      { id: 'territorio', nome: 'Território', icone: MapPinned },
+      { id: 'relatorios', nome: 'Relatórios', icone: FileText },
+      { id: 'gestor', nome: 'Visão do gestor', icone: ChartColumn },
+    ],
+  },
 ]
 
 export function NavegacaoLateral() {
@@ -37,9 +69,7 @@ export function NavegacaoLateral() {
     <aside className="lateral" data-aberto={aberto}>
       <div className="lateral-marca">
         <button type="button" onClick={() => navegar(() => abrirAba('visao-geral'))} aria-label="Pulse, visão geral">
-          <svg viewBox="0 0 34 24" aria-hidden>
-            <path d="M1 13h7l3-9 5 17 4-12 2 4h11" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+          <Marca />
           Pulse
         </button>
         <button type="button" className="lateral-menu-movel" aria-label="Menu do Pulse"
@@ -48,23 +78,35 @@ export function NavegacaoLateral() {
         </button>
       </div>
       <div className="lateral-menu" id="lateral-menu">
+        <button type="button" className="lateral-palco" aria-current={tela === 'palco' ? 'page' : undefined}
+          onClick={() => navegar(() => irPara('palco'))}>
+          <Presentation aria-hidden />
+          Demonstração guiada
+        </button>
         <nav aria-label="Telas do Pulse">
-          <p>Equipe</p>
-          {SECOES.map(({ id, nome }) => {
-            const contador = contadores[id]
-            return (
-              <button key={id} type="button" aria-current={tela === 'equipe' && aba === id ? 'page' : undefined}
-                onClick={() => navegar(() => abrirAba(id))}>
-                {nome}
-                {!!contador && <small data-alerta={id === 'alertas'}>{contador}</small>}
-              </button>
-            )
-          })}
-          <p>Demonstração</p>
+          {GRUPOS.map(({ titulo, secoes }) => (
+            <div key={titulo}>
+              <p>{titulo}</p>
+              {secoes.map(({ id, nome, icone: Icone }) => {
+                const contador = contadores[id]
+                return (
+                  <button key={id} type="button" aria-current={tela === 'equipe' && aba === id ? 'page' : undefined}
+                    onClick={() => navegar(() => abrirAba(id))}>
+                    <Icone aria-hidden />
+                    {nome}
+                    {!!contador && <small data-alerta={id === 'alertas'}>{contador}</small>}
+                  </button>
+                )
+              })}
+            </div>
+          ))}
+          <p>Bastidores</p>
           <button type="button" aria-current={tela === 'paciente' ? 'page' : undefined} onClick={() => navegar(() => irPara('paciente'))}>
+            <MessagesSquare aria-hidden />
             Conversa do paciente
           </button>
           <button type="button" aria-current={tela === 'rastro' ? 'page' : undefined} onClick={() => navegar(() => irPara('rastro'))}>
+            <Route aria-hidden />
             Rastro das decisões
           </button>
         </nav>

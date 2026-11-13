@@ -147,7 +147,7 @@ function Desenho({ percorridas, ultima }: { percorridas: Map<string, Cor>; ultim
               key={`${de.id}-${para.id}`}
               d={d}
               fill="none"
-              stroke={acesa ? VARIAVEL_DA_COR[percorridas.get(para.id)!] : '#b9c1ce'}
+              stroke={acesa ? VARIAVEL_DA_COR[percorridas.get(para.id)!] : 'var(--apagado)'}
               strokeWidth={acesa ? 2 : 1}
               strokeOpacity={acesa ? 0.95 : longo ? 0.4 : 0.8}
               strokeDasharray={longo ? '3 3' : undefined}
@@ -159,9 +159,9 @@ function Desenho({ percorridas, ultima }: { percorridas: Map<string, Cor>; ultim
           const { x, y } = centro(etapa)
           const cor = percorridas.get(etapa.id)
           const acesa = cor !== undefined
-          const traco = acesa ? VARIAVEL_DA_COR[cor] : '#c3cad6'
+          const traco = acesa ? VARIAVEL_DA_COR[cor] : 'var(--apagado)'
           const fundo = acesa ? VARIAVEL_SUAVE[cor] : 'var(--card)'
-          const tinta = acesa ? VARIAVEL_DA_COR[cor] : '#8d97a8'
+          const tinta = acesa ? VARIAVEL_DA_COR[cor] : 'var(--muted-foreground)'
           const meiaL = LARGURA_NO / 2
           const meiaA = ALTURA_NO / 2
           return (
@@ -218,7 +218,7 @@ function Desenho({ percorridas, ultima }: { percorridas: Map<string, Cor>; ultim
         })}
       </svg>
       {emFoco && (
-        <p className="pointer-events-none sticky bottom-2 mx-2 rounded-lg bg-primary px-2.5 py-1.5 text-sm text-primary-foreground shadow-lg">
+        <p className="pointer-events-none sticky bottom-2 mx-2 rounded-lg bg-foreground px-2.5 py-1.5 text-sm text-background shadow-lg">
           <strong>{emFoco}</strong> {ETAPA_POR_ID[emFoco].nome}
         </p>
       )}

@@ -25,14 +25,14 @@ export type AbaEquipe =
   | 'relatorios'
   | 'gestor'
 
-export type Tela = 'paciente' | 'equipe' | 'rastro'
+export type Tela = 'paciente' | 'equipe' | 'rastro' | 'palco'
 
 const ABAS: AbaEquipe[] = ['visao-geral', 'alertas', 'duvidas', 'aprovacoes', 'casos', 'acs', 'territorio', 'relatorios', 'gestor']
 
 /** Lê a tela e a aba da equipe do endereço (#/equipe/aprovacoes), para o link e o recarregamento manterem o lugar. */
 function lerEndereco(): { tela: Tela; aba: AbaEquipe | null } {
   const [tela, aba] = window.location.hash.replace(/^#\/?/, '').split('/')
-  const valida = tela === 'paciente' || tela === 'rastro' ? tela : 'equipe'
+  const valida = tela === 'paciente' || tela === 'rastro' || tela === 'palco' ? tela : 'equipe'
   return { tela: valida, aba: ABAS.includes(aba as AbaEquipe) ? (aba as AbaEquipe) : null }
 }
 

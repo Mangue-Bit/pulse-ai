@@ -1,6 +1,7 @@
 import { AreaEquipe } from '@/areas/equipe/AreaEquipe'
 import { VisaoGeral } from '@/areas/equipe/VisaoGeral'
 import { AreaPaciente } from '@/areas/paciente/AreaPaciente'
+import { AreaPalco } from '@/areas/palco/AreaPalco'
 import { AreaRastro } from '@/areas/rastro/AreaRastro'
 import { BarraSuperior } from '@/componentes/BarraSuperior'
 import { NavegacaoLateral } from '@/componentes/NavegacaoLateral'
@@ -11,6 +12,7 @@ function Tela() {
   const { tela, aba } = useEstado()
   if (tela === 'equipe') return aba === 'visao-geral' ? <VisaoGeral /> : <AreaEquipe />
   if (tela === 'rastro') return <AreaRastro />
+  if (tela === 'palco') return <AreaPalco />
   return <AreaPaciente />
 }
 

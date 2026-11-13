@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-import { Pause, Play, Radio, RotateCcw, WifiOff } from 'lucide-react'
+import { Pause, Play, Presentation, Radio, RotateCcw, WifiOff } from 'lucide-react'
 
 import { Selecao } from '@/componentes/basicos'
 import { Button } from '@/componentes/ui/button'
@@ -55,7 +55,7 @@ function Segmentos<T extends string | number>({
 }
 
 export function AreaRastro() {
-  const { rastro: origem, mostrarRastro, paciente, pacientes, escolherPaciente, conectado, casos } = useEstado()
+  const { rastro: origem, mostrarRastro, paciente, pacientes, escolherPaciente, conectado, casos, irPara } = useEstado()
   const [visao, setVisao] = useState<Visao>('passos')
   const rastro = useRastro(origem, paciente?.id ?? null, conectado)
 
@@ -77,7 +77,7 @@ export function AreaRastro() {
     <div className="tela-rastro flex h-full flex-col">
       <header className="flex flex-wrap items-end gap-x-6 gap-y-3 border-b bg-card px-8 pt-6 pb-4">
         <div className="min-w-0 flex-1">
-          <h1 className="font-serif text-[1.75rem] leading-tight font-semibold">Como o Pulse decidiu</h1>
+          <h1>Como o Pulse decidiu</h1>
           <p className="mt-1 text-[0.95rem] text-muted-foreground">
             Cada passo que o Pulse deu, na ordem em que aconteceu. Clique em um passo para ver os detalhes.
           </p>
@@ -183,7 +183,7 @@ export function AreaRastro() {
         ) : semDados ? (
           <div className="flex flex-col items-center gap-3 px-6 py-20 text-center">
             <WifiOff className="size-6 text-muted-foreground" aria-hidden />
-            <p className="font-serif text-xl font-semibold">Sem conexão com o serviço</p>
+            <p className="font-display text-lg font-bold tracking-tight">Sem conexão com o serviço</p>
             <p className="max-w-sm text-[0.95rem] leading-relaxed text-muted-foreground">
               Enquanto isso, veja um exemplo completo gravado.
             </p>
@@ -201,8 +201,16 @@ export function AreaRastro() {
                   aoFim={aoVivo || rastro.reproduzindo}
                   vazio={
                     aoVivo
-                      ? 'Envie uma mensagem na tela do Paciente. Cada passo aparece aqui enquanto acontece.'
+                      ? 'Envie uma mensagem na conversa do paciente. Cada passo aparece aqui enquanto acontece.'
                       : 'Este caso não tem passos gravados.'
+                  }
+                  acaoDoVazio={
+                    aoVivo && (
+                      <Button variant="outline" onClick={() => irPara('palco')}>
+                        <Presentation data-icon="inline-start" />
+                        Abrir a demonstração guiada
+                      </Button>
+                    )
                   }
                 />
               </div>

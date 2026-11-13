@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils'
 
 const ORDEM: Record<Duvida['status'], number> = { aberta: 0, vencida: 1, respondida: 2 }
 
-function CartaoDeDuvida({ duvida }: { duvida: Duvida }) {
+export function CartaoDeDuvida({ duvida }: { duvida: Duvida }) {
   const { atuando, agora, duvidas } = useEstado()
   const { executar, ocupado, erro } = useAcao()
   const [resposta, setResposta] = useState('')

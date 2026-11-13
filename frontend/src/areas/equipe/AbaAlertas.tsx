@@ -60,7 +60,7 @@ function Cadeia({ alerta }: { alerta: Alerta }) {
   )
 }
 
-function CartaoDeAlerta({ alerta }: { alerta: Alerta }) {
+export function CartaoDeAlerta({ alerta }: { alerta: Alerta }) {
   const { atuando, agora, alertas, pacientes } = useEstado()
   const { executar, ocupado, erro } = useAcao()
   const [falsoPositivo, setFalsoPositivo] = useState(false)

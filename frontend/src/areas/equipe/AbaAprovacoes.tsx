@@ -9,6 +9,7 @@ import {
   Footprints,
   MessageSquareText,
   Pencil,
+  Presentation,
   ShieldCheck,
   ShieldX,
   X,
@@ -116,7 +117,7 @@ function Verificacao({ proposta }: { proposta: Proposta }) {
   )
 }
 
-function CartaoPendente({ proposta }: { proposta: Proposta }) {
+export function CartaoPendente({ proposta }: { proposta: Proposta }) {
   const { atuando, agora, propostas, casos, mostrarRastro } = useEstado()
   const { executar, ocupado, erro } = useAcao()
   const [modo, setModo] = useState<'ver' | 'editar' | 'recusar'>('ver')
@@ -268,11 +269,13 @@ function CartaoPendente({ proposta }: { proposta: Proposta }) {
         </div>
       )}
 
+      {erro && <p className="text-sm font-medium text-urgencia">{erro}</p>}
+
       {modo === 'ver' && (
-        <footer className="flex flex-wrap items-center gap-2">
+        <footer className="sticky bottom-0 -mx-5 -mb-5 flex flex-wrap items-center gap-2 rounded-b-xl border-t bg-card px-5 py-3">
           <Button
             size="lg"
-            className="bg-equipe px-4 text-white hover:bg-equipe/85"
+            className="px-4"
             disabled={ocupado || !profissional}
             onClick={() => void concluir(() => api.aprovarProposta(proposta.id, profissional))}
           >
@@ -303,12 +306,11 @@ function CartaoPendente({ proposta }: { proposta: Proposta }) {
           </Button>
         </footer>
       )}
-      {erro && <p className="text-sm font-medium text-urgencia">{erro}</p>}
     </Cartao>
   )
 }
 
-function LinhaDecidida({ proposta }: { proposta: Proposta }) {
+export function LinhaDecidida({ proposta }: { proposta: Proposta }) {
   return (
     <li className="flex flex-wrap items-center gap-x-3 gap-y-1 border-t px-3 py-2 first:border-t-0">
       <Etiqueta cor={COR_DO_ESTADO[proposta.estado]}>{ESTADO_PROPOSTA[proposta.estado]}</Etiqueta>
@@ -324,7 +326,7 @@ function LinhaDecidida({ proposta }: { proposta: Proposta }) {
 }
 
 export function AbaAprovacoes() {
-  const { propostas, propostaEmFoco } = useEstado()
+  const { propostas, propostaEmFoco, irPara } = useEstado()
   const [selecionada, setSelecionada] = useState<{ foco: string | null; id: string } | null>(null)
   const todas = propostas.dados ?? []
   const pendentes = todas.filter((p) => p.estado === 'pendente')
@@ -337,7 +339,16 @@ export function AbaAprovacoes() {
   return (
     <div className="flex flex-col gap-4">
       {pendentes.length === 0 ? (
-        <Vazio icone={ClipboardCheck} titulo="Nada para aprovar agora">
+        <Vazio
+          icone={ClipboardCheck}
+          titulo="Nada para aprovar agora"
+          acao={
+            <Button variant="outline" onClick={() => irPara('palco')}>
+              <Presentation data-icon="inline-start" />
+              Simular o relato de um paciente
+            </Button>
+          }
+        >
           Quando um paciente contar uma dificuldade, a sugestão do Pulse aparece aqui.
         </Vazio>
       ) : (

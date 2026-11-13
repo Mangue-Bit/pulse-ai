@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 
 import { AnimatePresence, motion } from 'framer-motion'
 import { Bot, ChevronDown, Cog, ListTree, ShieldCheck, User, Wrench, type LucideIcon } from 'lucide-react'
@@ -7,6 +7,7 @@ import type { Ator, Evento } from '@/api'
 import { Etiqueta, Vazio } from '@/componentes/basicos'
 import { CLASSES, corDoEvento, nomeDaEtapa, ROTULO_DO_ATOR, travessia } from '@/fluxo'
 import { dolares, horaComSegundos, milissegundos, nomeDoCampo, valorLegivel } from '@/lib/formato'
+import { rolarAteOFim } from '@/lib/rolagem'
 import { cn } from '@/lib/utils'
 
 const ICONE_DO_ATOR: Record<Ator, LucideIcon> = {
@@ -105,8 +106,8 @@ function LinhaDeEvento({ evento, ultimo }: { evento: Evento; ultimo: boolean }) 
           aberto && 'bg-muted/70',
         )}
       >
-        <div className="flex items-center gap-2">
-          <span className="min-w-0 flex-1 truncate font-semibold">{nomeDaEtapa(evento.etapa)}</span>
+        <div className="flex items-start gap-2">
+          <span className="min-w-0 flex-1 leading-snug font-semibold">{nomeDaEtapa(evento.etapa)}</span>
           {decisao && (
             <span className={cn('rounded-md px-1.5 text-xs font-bold', classes.suave, classes.texto)}>{decisao}</span>
           )}
@@ -176,18 +177,18 @@ function Fronteira({ texto }: { texto: string }) {
   )
 }
 
-export function LinhaDoTempo({ eventos, vazio, aoFim = true }: { eventos: Evento[]; vazio: string; aoFim?: boolean }) {
+export function LinhaDoTempo({ eventos, vazio, acaoDoVazio, aoFim = true }: { eventos: Evento[]; vazio: string; acaoDoVazio?: ReactNode; aoFim?: boolean }) {
   const grupos = useMemo(() => agrupar(eventos), [eventos])
   const fim = useRef<HTMLDivElement>(null)
   const quantidade = eventos.length
 
   useEffect(() => {
-    if (aoFim) fim.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
+    if (aoFim) rolarAteOFim(fim.current)
   }, [quantidade, aoFim])
 
   if (quantidade === 0) {
     return (
-      <Vazio icone={ListTree} titulo="Nenhuma etapa registrada">
+      <Vazio icone={ListTree} titulo="Nenhuma etapa registrada" acao={acaoDoVazio}>
         {vazio}
       </Vazio>
     )
@@ -202,7 +203,7 @@ export function LinhaDoTempo({ eventos, vazio, aoFim = true }: { eventos: Evento
         return (
           <section key={`${grupo.chave}-${primeiro.id}`}>
             <header className="mb-1 flex items-baseline justify-between gap-2 px-1">
-              <h3 className="font-serif text-base font-semibold">
+              <h3 className="text-base font-bold">
                 {TITULO_DA_INTERACAO[primeiro.etapa] ?? nomeDaEtapa(primeiro.etapa)}
               </h3>
               <time className="text-xs text-muted-foreground">{horaComSegundos(primeiro.criado_em)}</time>
