@@ -141,3 +141,67 @@ def _interpretar_relato(blocos: dict[str, str]) -> dict:
     if resposta["lembrete"]:
         return {**resposta, "barreira": "nao_identificada", "certeza": 0.7}
     return {**resposta, "entendivel": False, "certeza": 0.2}
+
+
+# --- Pontos 2 a 6: Cuidado ------------------------------------------------------
+# Respostas mínimas e determinísticas, para a demonstração sem chave e para os
+# testes. As conferências do código (item permitido, fonte citada, frase com
+# fonte) continuam valendo: o simulador só escolhe o caminho mais simples.
+
+_ESPECIALISTAS_POR_ENTRADA = {"registro_acs": ["relatorio"]}
+
+
+def _json(blocos: dict[str, str], rotulo: str, padrao):
+    import json
+
+    try:
+        return json.loads(blocos.get(rotulo, ""))
+    except ValueError:
+        return padrao
+
+
+def _fonte_preferida(fontes: list[dict]) -> str | None:
+    """Primeiro trecho do corpus; o histórico só serve se não houver outro."""
+    ordenadas = sorted(fontes, key=lambda f: f.get("origem") == "historico")
+    return ordenadas[0]["id"] if ordenadas else None
+
+
+@simulador("delegar")
+def _delegar(blocos: dict[str, str]) -> dict:
+    tipo = blocos.get("tipo_de_entrada", "relato").strip()
+    return {"especialistas": _ESPECIALISTAS_POR_ENTRADA.get(tipo, ["intervencao"]), "informacao_faltante": None}
+
+
+@simulador("escolher_intervencao")
+def _escolher_intervencao(blocos: dict[str, str]) -> tuple[str, dict] | None:
+    itens = _json(blocos, "itens_permitidos", [])
+    fonte = _fonte_preferida(_json(blocos, "contexto_recuperado", []))
+    if not itens or fonte is None:
+        return None
+    item = min(itens, key=lambda i: i.get("posicao", 0))
+    argumentos = {
+        "item_catalogo_id": item["id"],
+        "justificativa": f"O item responde ao fator de risco {blocos.get('fator_de_risco', '').strip()} "
+                         "e é o primeiro da ordem do catálogo para este caso.",
+        "fontes": [fonte],
+    }
+    if item["ferramenta"] == "enviar_mensagem":
+        argumentos["canal"] = item.get("canal_preferido") if item.get("canal_preferido") in ("texto", "audio") else "texto"
+    else:
+        argumentos["tipo"] = "visita"
+    return item["ferramenta"], argumentos
+
+
+@simulador("verificar_proposta")
+def _verificar_proposta(blocos: dict[str, str]) -> dict:
+    return {"aprovada": True, "motivos": []}
+
+
+@simulador("redigir_relatorio")
+def _redigir_relatorio(blocos: dict[str, str]) -> dict:
+    material = _json(blocos, "material_do_paciente", [])
+    frases = [
+        {"texto": f"{m.get('titulo', 'Registro')}: {m.get('trecho', '').strip()[:240]}", "fonte_id": m["id"]}
+        for m in material[:3] if m.get("id")
+    ]
+    return {"frases": frases}
