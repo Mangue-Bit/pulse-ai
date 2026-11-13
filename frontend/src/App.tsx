@@ -1,21 +1,20 @@
-import { useEffect, useState } from 'react'
+import { AreaEquipe } from '@/areas/equipe/AreaEquipe'
+import { AreaPaciente } from '@/areas/paciente/AreaPaciente'
+import { AreaRastro } from '@/areas/rastro/AreaRastro'
+import { BarraSuperior } from '@/componentes/BarraSuperior'
+import { ProvedorDeEstado } from '@/estado'
 
 export default function App() {
-  const [estado, setEstado] = useState('verificando')
-
-  useEffect(() => {
-    fetch('/api/saude')
-      .then((r) => r.json())
-      .then((s) => setEstado(s.status === 'ok' ? 'no ar' : 'indisponível'))
-      .catch(() => setEstado('indisponível'))
-  }, [])
-
   return (
-    <main className="grid min-h-screen place-items-center bg-slate-50 text-slate-900">
-      <div className="text-center">
-        <h1 className="text-4xl font-semibold">Pulse</h1>
-        <p className="mt-2 text-slate-600">Serviço: {estado}</p>
+    <ProvedorDeEstado>
+      <div className="flex h-screen min-w-[1280px] flex-col overflow-hidden">
+        <BarraSuperior />
+        <div className="grid min-h-0 flex-1 grid-cols-[312px_minmax(0,1fr)_372px]">
+          <AreaPaciente />
+          <AreaEquipe />
+          <AreaRastro />
+        </div>
       </div>
-    </main>
+    </ProvedorDeEstado>
   )
 }
